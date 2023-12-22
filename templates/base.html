@@ -1,0 +1,36 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'viewer/styles.css' %}">
+</head>
+<body>
+    <header class="headContainer">
+        <a href="{% url 'index' %}" class="headContainer-title"><h1>Eden</h1></a>
+    </header>
+    <nav class="navContainer">
+        <a href=""><button id="Login">Přihlásit se</button> </a>
+        <a href=""><button id="Logout">Odhlásit se</button> </a>
+        <a href=""><button id="Register">Registrace</button> </a>
+        <a href=""><button id="Admin">Admin</button> </a>
+    </nav>
+    <nav class="navContainer2">
+        <a href=""><button id="Europe">Evropa</button> </a>
+        <a href=""><button id="Asia">Asie</button> </a>
+        <a href=""><button id="Africa">Afrika</button> </a>
+        <a href=""><button id="America">Amerika</button> </a>
+        <a href=""><button id="Hotels">Hotely</button> </a>
+        <a href=""><button id="First minute">First minute</button> </a>
+        <a href=""><button id="Last minute">Last minute</button> </a>
+        <a href=""><button id="Administration">Administrace</button> </a>
+    </nav>
+    <main class="article">
+        {% block content %}{% endblock %}
+    </main>
+    <footer>Copyright created by Marcel Jurčák 2024</footer>
+    <script src="{% static 'viewer/script.js' %}"></script>
+</body>
+</html>

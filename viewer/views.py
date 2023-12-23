@@ -3,7 +3,7 @@ from logging import getLogger
 from django.core.files.base import ContentFile
 from django.db.models import Avg
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, Textarea, inlineformset_factory
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.template.defaultfilters import slugify
 from django.urls import reverse_lazy
 from django.views import View
@@ -28,6 +28,7 @@ class ImageForm(ModelForm):
 
 # RATING
 
+
 def rate_hotel(request):
     user = request.user
     if request.method == 'POST':
@@ -35,7 +36,36 @@ def rate_hotel(request):
         hotel_object = Hotel.objects.get(id=hotel_id)
         rating = request.POST.get('rating')
 
-        if Rat
+        if rating:
+            if Rating.objects.filter(hotel=hotel_object, user=user).count() > 0:
+                user_rating = Rating.objects.get(hotel=hotel_object, user=user)
+                user_rating.rating = rating
+                user_rating.save()
+            else:
+                Rating.objects.create(
+                    hotel=hotel_object,
+                    user=user,
+                    rating=rating
+                )
+
+        return redirect(f"/hotel/{hotel_id}/")
+
+
+def add_comment(request):
+    user = request.user
+    if request.method == 'POST':
+        hotel_id = request.POST.get('hotel_id')
+        hotel_object = Hotel.objects.get(id=hotel_id)
+        comment = request.POST.get('comment').strip()
+        if comment:
+            Comment.objects.create(
+                hotel=hotel_object,
+                user=user,
+                comment=comment
+            )
+
+    return redirect(f"/hotel/{hotel_id}")
+
 
 # CONTINENT
 

@@ -25,7 +25,7 @@
         <a href=""><button id="Hotels">Hotely</button> </a>
         <a href=""><button id="First minute">First minute</button> </a>
         <a href=""><button id="Last minute">Last minute</button> </a>
-        <a href=""><button id="Administration">Administrace</button> </a>
+        <a href="{% url 'administration' %}"><button id="Administration">Administrace</button> </a>
     </nav>
     <main class="article">
         {% block content %}{% endblock %}

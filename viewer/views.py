@@ -1,15 +1,15 @@
 from logging import getLogger
-
+from viewer.models import *
 from django.core.files.base import ContentFile
 from django.db.models import Avg
-from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, Textarea, inlineformset_factory
+from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
+    CharField, Textarea
 from django.shortcuts import render, redirect
-from django.template.defaultfilters import slugify
+from django.utils.text import slugify
 from django.urls import reverse_lazy
 from django.views import View
-from django.views.generic import CreateView, UpdateView, DeleteView
+from django.views.generic.edit import CreateView, UpdateView, DeleteView
 
-from viewer.models import *
 
 # Create your views here.
 LOGGER = getLogger()
@@ -19,12 +19,17 @@ def index(request):
     return render(request, 'index.html')
 
 
+def administration(request):
+    return render(request, 'administration.html', )
+
 # Image form
+
 
 class ImageForm(ModelForm):
     class Meta:
         model = Images
         fields = ['image', 'description']
+
 
 # RATING
 
@@ -214,7 +219,7 @@ class HotelForm(Form):
         return super().clean()
 
 
-def hotel(request,pk):
+def hotel(request, pk):
     try:
         hotel_object = Hotel.objects.get(id=pk)
     except:

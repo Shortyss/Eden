@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Kontinent</h1>
+<ul>
+    {% for continent in continents %}
+    <li>
+        <a href="{% url 'continent' continent.id %}">{{continent}}</a>
+        <a href="{% url 'continent_update' continent.id %}"><button>Upravit</button></a>
+        <a href="{% url 'continent_delete' continent.id %}"><button>Smazat</button></a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'continent_create' %}"><button>Vytvořit nový</button></a>
+    </li>
+</ul>
+{% endblock %}

@@ -23,5 +23,10 @@ from viewer.views import *
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
-    path('create_continent/', ContinentCreateView.as_view(), name='create_continent')
+    path('administration/', administration, name='administration'),
+    path('continent_admin/', ContinentView.as_view(), name='continent_admin'),
+    path('create_continent/', ContinentCreateView.as_view(), name='create_continent'),
+    path('continents/update/<pk>/', ContinentUpdateView.as_view(), name='continent_update'),
+    path('continents/delete/<pk>/', ContinentDeleteView.as_view(), name='continent_delete'),
+
 ]

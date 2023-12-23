@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Administrace</h1>
+<div class="navigate">
+    <a href="{% url 'continent_admin' %}"><button>Administrace kontinentů</button></a>
+    <a href="{% url 'country_admin' %}"><button>Administrace zemí</button></a>
+    <a href="{% url 'city_admin' %}"><button>Administrace měst</button></a>
+    <a href="{% url 'hotel_admin' %}"><button>Administrace hotelů</button></a>
+</div>
+
+{% endblock %}

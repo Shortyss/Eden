@@ -36,5 +36,10 @@ urlpatterns = [
     path('countries/update/<pk>/', CountryUpdateView.as_view(), name='country_update'),
     path('countries/delete/<pk>/', CountryDeleteView.as_view(), name='country_delete'),
 
+    path('city_admin/', CityView.as_view(), name='city_admin'),
+    path('create_city/', CountryCreateView.as_view(), name='create_city'),
+    path('cities/update/<pk>/', CityUpdateView.as_view(), name='city_update'),
+    path('cities/delete/<pk>/', CityDeleteView.as_view(), name='city_delete'),
+
 
 ]

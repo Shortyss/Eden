@@ -1,6 +1,7 @@
 from logging import getLogger
 
 from django.core.files.base import ContentFile
+from django.db.models import Avg
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, Textarea, inlineformset_factory
 from django.shortcuts import render
 from django.template.defaultfilters import slugify
@@ -25,6 +26,16 @@ class ImageForm(ModelForm):
         model = Images
         fields = ['image', 'description']
 
+# RATING
+
+def rate_hotel(request):
+    user = request.user
+    if request.method == 'POST':
+        hotel_id = request.POST.get('hotel_id')
+        hotel_object = Hotel.objects.get(id=hotel_id)
+        rating = request.POST.get('rating')
+
+        if Rat
 
 # CONTINENT
 
@@ -171,6 +182,31 @@ class HotelForm(Form):
 
     def clean(self):
         return super().clean()
+
+
+def hotel(request,pk):
+    try:
+        hotel_object = Hotel.objects.get(id=pk)
+    except:
+        return render(request, 'index.html')
+
+    avg_rating = None
+    if Rating.objects.filter(hotel=hotel_object).count() > 0:
+        avg_rating = Rating.objects.filter(hotel=hotel_object).aggregate(Avg('rating'))
+
+    user = request.user
+    user_rating = None
+    if request.user.is_authenticated:
+        if Rating.objects.filter(hotel=hotel_object, user=user).count() > 0:
+            user_rating = Rating.objects.get(hotel=hotel_object, user=user)
+
+    comments = Comment.objects.filter(hotel=hotel_object).order_by('-created')
+
+    images = Images.objects.filter(hotel=hotel_object)
+
+    context = {'hotel': hotel_object, 'avg_rating': avg_rating,
+               'user_rating': user_rating, 'comments': comments, 'images': images}
+    return render(request, 'hotel.html', context)
 
 
 class HotelCreateView(CreateView):

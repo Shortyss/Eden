@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Model, CharField, IntegerField, DateField, ForeignKey, DO_NOTHING, TextField, CASCADE, \
-    DecimalField, ImageField
+    DecimalField, ImageField, SET_NULL, DateTimeField
 from django.contrib.auth.models import User
 
 
@@ -99,3 +99,23 @@ class Images(Model):
 
     def __str__(self):
         return self.description
+
+
+class Rating(Model):
+    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, null=False, blank=False)
+    user = ForeignKey(User, null=True, on_delete=SET_NULL)
+    rating = IntegerField(null=False, blank=False)
+
+    def __str__(self):
+        return f"{self.hotel}: {self.rating} od {self.user}"
+
+
+class Comment (Model):
+    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, null=False, blank=False)
+    user = ForeignKey(User, null=True, on_delete=SET_NULL)
+    comment = TextField(null=False, blank=False)
+    created = DateTimeField(auto_now_add=True)
+    updated = DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.hotel} ({self.user}): {self.comment[:50]}"

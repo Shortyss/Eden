@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>{{ continent.name }} Detail</h1>
+
+    {% for country in countries %}
+        <div class="country-box" onclick="showCities('{{ country.id }}')">
+        <img src="{% static 'path/to/country/image.jpg' %}" alt="{{ country.name }} Image">
+        <p>{{ country.name }}</p>
+        </div>
+    {% endfor %}
+
+    <div id="cities-container">
+
+    </div>
+
+{% endblock %}

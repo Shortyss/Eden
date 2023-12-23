@@ -17,9 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from viewer.views import index
+from viewer.models import Continent
+from viewer.views import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
+    path('create_continent/', ContinentCreateView.as_view(), name='create_continent')
 ]

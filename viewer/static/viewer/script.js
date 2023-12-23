@@ -12,3 +12,15 @@ function updateTime() {
 
 setInterval(updateTime, 1000);
 updateTime();
+
+function showCities(countryId) {
+      fetch(`/get_cities/${countryId}/`)
+        .then(response => response.json())
+        .then(data => {
+          const citiesContainer = document.getElementById('cities-container');
+          citiesContainer.innerHTML = '<h2>Cities:</h2>';
+          data.forEach(city => {
+            citiesContainer.innerHTML += `<p>${city.name}</p>`;
+          });
+        });
+}

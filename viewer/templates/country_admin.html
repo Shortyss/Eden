@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Země</h1>
+<ul>
+    {% for country in countries %}
+    <li>
+        <a href="{% url 'country' country.id %}">{{country}}</a>
+        <a href="{% url 'country_update' country.id %}"><button>Upravit</button></a>
+        <a href="{% url 'country_delete' country.id %}"><button>Smazat</button></a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'country_create' %}"><button>Vytvořit nový</button></a>
+    </li>
+</ul>
+{% endblock %}

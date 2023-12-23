@@ -20,6 +20,7 @@ from django.urls import path
 from viewer.models import Continent
 from viewer.views import *
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
@@ -27,19 +28,34 @@ urlpatterns = [
     path('administration/', administration, name='administration'),
 
     path('continent_admin/', ContinentView.as_view(), name='continent_admin'),
-    path('create_continent/', ContinentCreateView.as_view(), name='create_continent'),
+    path('continent/<pk>/', continent, name='continent'),
+    path('continent_create/', ContinentCreateView.as_view(), name='continent_create'),
     path('continents/update/<pk>/', ContinentUpdateView.as_view(), name='continent_update'),
     path('continents/delete/<pk>/', ContinentDeleteView.as_view(), name='continent_delete'),
 
     path('country_admin', CountryView.as_view(), name='country_admin'),
-    path('create_country/', CountryCreateView.as_view(), name='create_country'),
+    path('country/<pk>/', country, name='country'),
+    path('country_create/', CountryCreateView.as_view(), name='country_create'),
     path('countries/update/<pk>/', CountryUpdateView.as_view(), name='country_update'),
     path('countries/delete/<pk>/', CountryDeleteView.as_view(), name='country_delete'),
 
     path('city_admin/', CityView.as_view(), name='city_admin'),
-    path('create_city/', CountryCreateView.as_view(), name='create_city'),
+    path('city/<pk>/', city, name='city'),
+    path('city_create/', CityCreateView.as_view(), name='city_create'),
     path('cities/update/<pk>/', CityUpdateView.as_view(), name='city_update'),
     path('cities/delete/<pk>/', CityDeleteView.as_view(), name='city_delete'),
 
+    path('hotel_admin/', HotelView.as_view(), name='hotel_admin'),
+    path('hotel/<pk>/', hotel, name='hotel'),
+    path('hotel_create/', HotelCreateView.as_view(), name='hotel_create'),
+    path('hotels/update/<pk>', HotelUpdateView.as_view(), name='hotel_update'),
+    path('hotels/delete/<pk>/', HotelDeleteView.as_view(), name='hotel_delete'),
 
+    path('europe/<pk>/', EuropeCountriesView.as_view(), name='europe'),
+    path('america/<pk>/', AmericaCountriesView.as_view(), name='america'),
+    path('asia/<pk>/', AsiaCountriesView.as_view(), name='asia'),
+    path('africa/<pk>/', AfricaCountriesView.as_view(), name='africa'),
+
+    path('rate_hotel/', rate_hotel, name='rate_hotel'),
+    path('add_comment/', add_comment, name='add_comment'),
 ]

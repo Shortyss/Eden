@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <h1>Země v Americe</h1>
+  <h1>Země na kontinentu: {{ continent }}</h1>
   {% if countries %}
     <ul>
       {% for country in countries %}
@@ -9,6 +9,6 @@
       {% endfor %}
     </ul>
   {% else %}
-    <p>Žádné země v Americe nebyly nalezeny.</p>
+    <p>Žádné země na kontinentu nebyly nalezeny.</p>
   {% endif %}
 {% endblock %}

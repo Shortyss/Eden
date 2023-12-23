@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Města v zemi: {{ country }}</h1>
+  {% if cities %}
+    <ul>
+      {% for city in cities %}
+        <li><a href="{% url 'city' city.id %}">{{city}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné města ve státě nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

@@ -7,11 +7,8 @@ from django.contrib.auth.models import User
 # Create your models here.
 
 
-class City(Model):
-    name = CharField(max_length=132, null=False, blank=False, unique=True)
-
-    class Meta:
-        verbose_name_plural = "Cities"
+class Continent(Model):
+    name = CharField(max_length=64, null=False, blank=False, unique=True)
 
     def __str__(self):
         return f"{self.name}"
@@ -19,7 +16,7 @@ class City(Model):
 
 class Country(Model):
     name = CharField(max_length=132, null=False, blank=False, unique=True)
-    city = ForeignKey(City, on_delete=DO_NOTHING, related_name='city_of_country')
+    continent = ForeignKey(Continent, null=True, blank=True, on_delete=CASCADE, default=None)
 
     class Meta:
         verbose_name_plural = "Countries"
@@ -28,8 +25,12 @@ class Country(Model):
         return f"{self.name}"
 
 
-class Continent(Model):
-    name = CharField(max_length=64, null=False, blank=False, unique=True)
+class City(Model):
+    name = CharField(max_length=132, null=False, blank=False, unique=True)
+    country = ForeignKey(Country, null=True, blank=True, on_delete=CASCADE, default=None)
+
+    class Meta:
+        verbose_name_plural = "Cities"
 
     def __str__(self):
         return f"{self.name}"
@@ -90,7 +91,7 @@ class Purchase(Model):
         return f"{self.customer}- {self.travel_package}"
 
 
-class Images(Model):
+class Image(Model):
     image = ImageField(upload_to='images/')
     description = CharField(max_length=64, null=True, blank=True)
     continent = ForeignKey(Continent, on_delete=DO_NOTHING, null=True, blank=True)

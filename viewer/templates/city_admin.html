@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Města</h1>
+<ul>
+    {% for city in cities %}
+    <li>
+        <a href="{% url 'city' city.id %}">{{city}}</a>
+        <a href="{% url 'city_update' city.id %}"><button>Upravit</button></a>
+        <a href="{% url 'city_delete' city.id %}"><button>Smazat</button></a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'city_create' %}"><button>Vytvořit nový</button></a>
+    </li>
+</ul>
+{% endblock %}

@@ -1,18 +1,14 @@
 {% extends "base.html" %}
-<h1>{{ continent.name }}</h1>
-
-<h2>Státy:</h2>
-<ul>
-  {% for country in countries %}
-    <li>{{ country.name }}</li>
-  {% endfor %}
-</ul>
-
-<h2>Města:</h2>
-<ul>
-  {% for city in cities %}
-    <li>{{ city.name }}</li>
-  {% endfor %}
-</ul>
 
 {% block content %}
+  <h1>Země v Africe</h1>
+  {% if countries %}
+    <ul>
+      {% for country in countries %}
+        <li><a href="{% url 'country' country.id %}">{{country}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné země v Africe nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

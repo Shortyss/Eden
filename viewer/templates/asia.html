@@ -1,10 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+  <h1>Země v Asii</h1>
+  {% if countries %}
+    <ul>
+      {% for country in countries %}
+        <li><a href="{% url 'country' country.id %}">{{country}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné země v Asii nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

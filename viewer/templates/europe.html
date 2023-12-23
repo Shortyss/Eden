@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>{{ continent.name }} Detail</h1>
-
-    {% for country in countries %}
-        <div class="country-box" onclick="showCities('{{ country.id }}')">
-        <img src="{% static 'path/to/country/image.jpg' %}" alt="{{ country.name }} Image">
-        <p>{{ country.name }}</p>
-        </div>
-    {% endfor %}
-
-    <div id="cities-container">
-
-    </div>
-
+  <h1>Země v Evropě</h1>
+  {% if countries %}
+    <ul>
+      {% for country in countries %}
+        <li><a href="{% url 'country' country.id %}">{{country}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné země v Evropě nebyly nalezeny.</p>
+  {% endif %}
 {% endblock %}

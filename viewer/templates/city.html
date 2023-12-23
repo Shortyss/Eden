@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Hotely ve městě: {{ city }}</h1>
+  {% if hotels %}
+    <ul>
+      {% for hotel in hotels %}
+        <li><a href="{% url 'hotel' hotel.id %}">{{hotel}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné hotely ve městě nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

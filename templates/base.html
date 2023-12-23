@@ -18,10 +18,10 @@
         <a href=""><button id="Admin">Admin</button> </a>
     </nav>
     <nav class="navContainer2">
-        <a href=""><button id="Europe">Evropa</button> </a>
-        <a href=""><button id="Asia">Asie</button> </a>
-        <a href=""><button id="Africa">Afrika</button> </a>
-        <a href=""><button id="America">Amerika</button> </a>
+        <a href="{% url 'europe' pk=1 %}"><button id="Europe">Evropa</button> </a>
+        <a href="{% url 'asia' pk=2 %}"><button id="Asia">Asie</button> </a>
+        <a href="{% url 'africa' pk=3 %}"><button id="Africa">Afrika</button> </a>
+        <a href="{% url 'america' pk=4 %}"><button id="America">Amerika</button> </a>
         <a href=""><button id="Hotels">Hotely</button> </a>
         <a href=""><button id="First minute">First minute</button> </a>
         <a href=""><button id="Last minute">Last minute</button> </a>

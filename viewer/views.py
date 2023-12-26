@@ -21,14 +21,6 @@ def index(request):
 def administration(request):
     return render(request, 'administration.html', )
 
-# Image form
-
-
-# class ImageForm(ModelForm):
-#     class Meta:
-#         model = Image
-#         fields = ['image', 'description']
-
 
 # RATING
 
@@ -74,6 +66,13 @@ def add_comment(request):
 # CONTINENT
 
 
+def continent(request, pk):
+    continent_object = Continent.objects.get(id=pk)
+    countries = Country.objects.filter(continent=continent_object)
+    context = {'continent': continent_object, 'countries': countries}
+    return render(request, 'continent.html', context)
+
+
 class ContinentModelForm(ModelForm):
 
     class Meta:
@@ -97,27 +96,6 @@ class ContinentCreateView(CreateView):
     template_name = 'continent_create.html'
     form_class = ContinentModelForm
     success_url = reverse_lazy('administration')
-
-
-def continent(request, pk):
-    continent_object = Continent.objects.get(id=pk)
-    countries = Country.objects.filter(continent=continent_object)
-    context = {'continent': continent_object, 'countries': countries}
-    return render(request, 'continent.html', context)
-
-
-def country(request, pk):
-    country_object = Country.objects.get(id=pk)
-    cities = City.objects.filter(country=country_object)
-    context = {'country': country_object, 'cities': cities}
-    return render(request, 'country.html', context)
-
-
-def city(request, pk):
-    city_object = City.objects.get(id=pk)
-    hotels = Hotel.objects.filter(city=city_object)
-    context = {'city': city_object, 'hotels': hotels}
-    return render(request, 'city.html', context)
 
 
 class ContinentCountriesView(View):
@@ -161,6 +139,13 @@ class ContinentDeleteView(DeleteView):
 # COUNTRY
 
 
+def country(request, pk):
+    country_object = Country.objects.get(id=pk)
+    cities = City.objects.filter(country=country_object)
+    context = {'country': country_object, 'cities': cities}
+    return render(request, 'country.html', context)
+
+
 class CountryModelForm(ModelForm):
 
     class Meta:
@@ -200,6 +185,13 @@ class CountryDeleteView(DeleteView):
 
 
 # City
+
+
+def city(request, pk):
+    city_object = City.objects.get(id=pk)
+    hotels = Hotel.objects.filter(city=city_object)
+    context = {'city': city_object, 'hotels': hotels}
+    return render(request, 'city.html', context)
 
 
 class CityModelForm(ModelForm):

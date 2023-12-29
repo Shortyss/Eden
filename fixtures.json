@@ -1,0 +1,1 @@
+[{"model": "viewer.country", "pk": 1, "fields": {"name": "Chorvatsko"}}, {"model": "viewer.continent", "pk": 1, "fields": {"name": "Evropa"}}]

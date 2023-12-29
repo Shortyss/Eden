@@ -14,16 +14,30 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+import rest_framework
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path
+from django.contrib.auth.views import LoginView
+from django.urls import path, include
 
-from viewer.models import Continent
+from TravelPortal import settings
+from accounts.views import *
+from viewer.models import *
 from viewer.views import *
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
+
+    path('accounts/login/', LoginView.as_view(), name='login'),  # vlastní view
+    path('accounts/signup/', SignUpView.as_view(), name='signup'),  # vlastní view
+    path('accounts/', include('django.contrib.auth.urls')),
+
+    path('accounts/profile_create/<pk>', ProfileCreateView.as_view(), name='profile_create'),
+    path('accounts/profile/<pk>/', profile, name='profile'),
+    path('accounts/profile_edit/', profile_edit, name='profile_edit'),
 
     path('administration/', administration, name='administration'),
 
@@ -58,4 +72,10 @@ urlpatterns = [
 
     path('rate_hotel/', rate_hotel, name='rate_hotel'),
     path('add_comment/', add_comment, name='add_comment'),
-]
+
+    path('meal_admin/', MealPlanView.as_view(), name='meal_admin'),
+    path('meal/<pk>/', meal, name='meal'),
+    path('meal_create/', MealCreate.as_view(), name='meal_create'),
+    path('meals/update/<pk>/', MealUpdate.as_view(), name='meal_update'),
+    path('meals/delete/<pk>', MealDeleteView.as_view(), name='meal_delete'),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -12,10 +12,21 @@
         <a href="{% url 'index' %}" class="headContainer-title"><h1>Eden</h1></a>
     </header>
     <nav class="navContainer">
-        <a href=""><button id="Login">Přihlásit se</button> </a>
-        <a href=""><button id="Logout">Odhlásit se</button> </a>
-        <a href=""><button id="Register">Registrace</button> </a>
-        <a href=""><button id="Admin">Admin</button> </a>
+        {% if request.user.is_authenticated %}
+            <p class="signet_as">Přihlášen jako: {{ request.user.username }} </p>
+            <a href="{% url 'logout' %}"><button id="logout">Odhlásit se</button> </a>
+            {% if request.user.profile %}
+                <a href="{% url 'profile' pk=request.user.profile.pk %}"><button id="profile-button">Profil</button></a>
+            {% else %}
+                <a href="{% url 'profile_create' pk=request.user.pk %}"><button id="create-profile-btn">Vyvořit profil</button></a>
+            {% endif %}
+        {% else %}
+            <a href="{% url 'signup' %}"><button id="signup">Registrovat se</button> </a>
+            <a href="{% url 'login' %}"><button id="login">Přihlásit se</button> </a>
+        {% endif %}
+        {% if request.user.is_superuser %}
+            <a href="/admin/"><button id="Admin">Admin</button> </a>
+        {% endif %}
     </nav>
     <nav class="navContainer2">
         <a href="{% url 'europe' pk=1 %}"><button id="Europe">Evropa</button> </a>

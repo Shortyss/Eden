@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="container">
+    <h1>Profil: {{ profile.user.username }}</h1>
+
+    <div>
+      <h3>Informace:</h3>
+      <p>Jméno: {{ user.first_name }}</p>
+      <p>Příjmení: {{ user.last_name }}</p>
+      <p>Email: {{ user.email }}</p>
+      <p>Telefoní číslo: {{ profile.phone_number }}</p>
+      <p>Datum narození: {{ profile.birth_date }}</p>
+
+      <h3>Adresa:</h3>
+      <p>Ulice: {{ profile.street }}, {{profile.house_number}}</p>
+      <p>Město: {{ profile.city }}</p>
+      <p>Stát: {{ profile.country }}</p>
+      <p>PSČ: {{ profile.postal_code }}</p>
+
+
+      {% if images %}
+        <h3>Profilová fotografie:</h3>
+        <ul>
+          {% for image in images %}
+            <li>
+              <img src="{{ image.image.url }}" alt="{{ image.description }}">
+              <p>Description: {{ image.description }}</p>
+            </li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+    <div>
+      <a href="{% url 'profile_edit' %}"><button id="profile-edit">Upravit profil</button> </a>
+    </div>
+  </div>
+{% endblock %}

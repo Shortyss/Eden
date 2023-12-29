@@ -15,11 +15,15 @@
         {% endif %}
     </div>
     <div class="name">Hotel: {{ hotel.name }}</div>
-    <div id="star-rating">Počet hvězdiček: {{ hotel.star_rating }}</div>
+    <div id="star-rating">Počet hvězdiček:
+        {% for _ in "x"|rjust:hotel.star_rating %}
+        <span class="star">&#9733;</span>
+    {% endfor %}
+    </div>
     <div id="hotel-city">Město: {{ hotel.city }}</div>
     <div id="hotel-country">Stát: {{ hotel.city.country }}</div>
     <div class="images">
-        {% for image in images %}
+        {% for image in hotel.get_images %}
         <div class="image-container"><img src="{{ image.image.url }}" width="150px"></div>
         {% endfor %}
     </div>
@@ -47,7 +51,7 @@
     {% if request.user.is_authenticated %}
     <form action="{% url 'add_comment' %}" method="post">
         {% csrf_token %}
-        <label for="rating">Pridat komentar:</label>
+        <label for="rating">Přidat komentář:</label>
         <div>
             <textarea name="comment" cols="100" rows="5"></textarea>
         </div>

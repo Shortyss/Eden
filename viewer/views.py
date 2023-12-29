@@ -3,7 +3,7 @@ from viewer.models import *
 from django.core.files.base import ContentFile
 from django.db.models import Avg
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
-    CharField, Textarea, ClearableFileInput, FileField, HiddenInput
+    CharField, Textarea, ClearableFileInput, FileField, HiddenInput, FileInput
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.urls import reverse_lazy
@@ -233,10 +233,13 @@ class CityDeleteView(DeleteView):
 
 # Hotel
 
+
 class HotelModelForm(ModelForm):
     class Meta:
         model = Hotel
         fields = '__all__'
+
+    images = MultiFileField(min_num=1, max_num=8, max_file_size=1024*1024*5)
 
     def clean_name(self):
         initial_form = super().clean()
@@ -245,6 +248,16 @@ class HotelModelForm(ModelForm):
 
     def clean(self):
         return super().clean()
+
+    def save(self, commit=True):
+        instance = super().save(commit)
+        images = self.cleaned_data.get('images')
+
+        if images:
+            for image in images:
+                HotelImage.objects.create(hotel=instance, image=image)
+
+        return instance
 
 
 def hotel(request, pk):
@@ -265,7 +278,7 @@ def hotel(request, pk):
 
     comments = Comment.objects.filter(hotel=hotel_object).order_by('-created')
 
-    images = Image.objects.filter(hotel=hotel_object)
+    images = HotelImage.objects.filter(hotel=hotel_object)
 
     context = {'hotel': hotel_object, 'avg_rating': avg_rating,
                'user_rating': user_rating, 'comments': comments, 'images': images}
@@ -297,3 +310,45 @@ class HotelDeleteView(DeleteView):
     model = Hotel
     success_url = reverse_lazy('administration')
 
+
+# Meal plan
+
+
+def meal(request, pk):
+    meal_object = MealPlan.objects.get(id=pk)
+    meals = MealPlan.objects.filter(city=meal_object)
+    context = {'meal': meal_object, 'meals': meals}
+    return render(request, 'meal.html', context)
+
+
+class MealPlanForm(ModelForm):
+    class Meta:
+        model = MealPlan
+        fields = ['name']
+
+
+class MealPlanView(View):
+    def get(self, request):
+        meal_list = MealPlan.objects.all()
+        context = {'meals': meal_list}
+        return render(request, 'meal_admin.html', context)
+
+
+class MealCreate(CreateView):
+    template_name = 'meal_create.html'
+    model = MealPlan
+    form_class = MealPlanForm
+    success_url = reverse_lazy('administration')
+
+
+class MealUpdate(UpdateView):
+    template_name = 'meal_create.html'
+    model = MealPlan
+    form_class = MealPlanForm
+    success_url = reverse_lazy('administration')
+
+
+class MealDeleteView(DeleteView):
+    template_name = 'meal_confirm_delete.html'
+    model = MealPlan
+    success_url = reverse_lazy('administration')

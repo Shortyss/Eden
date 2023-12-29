@@ -352,3 +352,16 @@ class MealDeleteView(DeleteView):
     template_name = 'meal_confirm_delete.html'
     model = MealPlan
     success_url = reverse_lazy('administration')
+
+
+# Travel packages
+
+
+class TravelPackageForm(ModelForm):
+    class Meta:
+        model = TravelPackage
+        fields = '__all__'
+
+
+def travel_package(request, pk):
+    pass

@@ -64,24 +64,31 @@ class MealPlan(Model):
         return self.name
 
 
-class TravelPackage(Model):
-    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
-    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, verbose_name='Strava')
-    arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
-    departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-    price_per_person = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena za osobu')
-    price_per_child = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena za dítě')
-
-    def __str__(self):
-        return f"{self.hotel.name} - {self.meal_plan.name}"
-
-
 class Airport(Model):
     name = CharField(max_length=132, null=True, blank=True, verbose_name='Název')
     airport_city = ForeignKey(City, on_delete=DO_NOTHING, null=True, blank=True, verbose_name='Město')
 
     def __str__(self):
         return f"{self.name} - {self.airport_city}"
+
+
+class TravelPackage(Model):
+    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
+    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, verbose_name='Strava')
+    departure_airport = ForeignKey(Airport, on_delete=DO_NOTHING, default=None,
+                                   related_name='departure_airport', verbose_name='Letiště odlet')
+    arrival_airport = ForeignKey(Airport, on_delete=DO_NOTHING, default=None, related_name='arrival_airport',
+                                 verbose_name='Letiště přílet')
+    arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
+    departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
+    base_price = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena za osobu')
+    price_modifier = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Upravená cena')
+
+    def calculate_total_price(self):
+        return self.base_price + self.price_modifier
+
+    def __str__(self):
+        return f"{self.hotel.name} - {self.meal_plan.name}"
 
 
 class Purchase(Model):
@@ -91,6 +98,17 @@ class Purchase(Model):
     number_of_children = IntegerField(null=True, blank=True, verbose_name='Počet dětí')
     total_price = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena celkem')
     special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
+
+    def save(self, *args, **kwargs):
+        travel_package = self.travel_package
+        package_price = travel_package.calculate_total_price()
+
+        total_price = package_price * self.number_of_adults
+        if self.number_of_children:
+            total_price += package_price * self.number_of_children
+
+        self.total_price = total_price
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.customer}- {self.travel_package}"

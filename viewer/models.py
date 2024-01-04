@@ -1,3 +1,5 @@
+from _decimal import Decimal
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Model, CharField, IntegerField, DateField, ForeignKey, DO_NOTHING, TextField, CASCADE, \
     DecimalField, ImageField, SET_NULL, DateTimeField, ManyToManyField
@@ -37,9 +39,27 @@ class City(Model):
         return f"{self.name}"
 
 
+class Airport(Model):
+    name = CharField(max_length=132, null=True, blank=True, verbose_name='Název')
+    airport_city = ForeignKey(City, on_delete=DO_NOTHING, null=True, blank=True, verbose_name='Město')
+
+    def __str__(self):
+        return f"{self.name} - {self.airport_city}"
+
+
 class Hotel(Model):
     name = CharField(max_length=132, null=False, blank=False, verbose_name='Název')
     city = ForeignKey(City, on_delete=DO_NOTHING, related_name='hotels_of_cities', verbose_name='Město')
+    country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country', verbose_name='Stát')
+    airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True, related_name='hotel_airport', verbose_name='Letiště')
+
+    total_rooms = IntegerField(default=0, verbose_name='Celkový počet pokojů')
+    booked_rooms = IntegerField(default=0, verbose_name='Rezervované pokoje')
+    single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')
+    double_rooms = IntegerField(default=0, verbose_name='Dvoulůžkové pokoje')
+    family_rooms = IntegerField(default=0, verbose_name='Rodinné pokoje')
+    suites = IntegerField(default=0, verbose_name='Apartmány')
+
     star_rating = IntegerField(default=0, verbose_name='Počet hvězdiček', choices=[
         (1, '1 hvězdička'),
         (2, '2 hvězdičky'),
@@ -50,6 +70,20 @@ class Hotel(Model):
     description = TextField(null=True, blank=True, verbose_name='Popis')
     images = MultiFileField(min_num=1, max_num=6, max_file_size=1024 * 1024 * 5, required=False)
 
+    def available_rooms(self, room_type=None):
+        if room_type is None:
+            return self.total_rooms - self.booked_rooms
+        elif room_type == 'single':
+            return self.single_rooms - self.booked_rooms
+        elif room_type == 'double':
+            return self.double_rooms - self.booked_rooms
+        elif room_type == 'family':
+            return self.family_rooms - self.booked_rooms
+        elif room_type == 'suite':
+            return self.suites - self.booked_rooms
+        else:
+            return 0
+
     def get_images(self):
         return HotelImage.objects.filter(hotel=self)
 
@@ -59,59 +93,69 @@ class Hotel(Model):
 
 class MealPlan(Model):
     name = CharField(max_length=32, null=False, blank=False, verbose_name='Název')
+    price = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena za stravu')
 
     def __str__(self):
-        return self.name
+        return f"{self.name}, {self.price}"
 
 
-class Airport(Model):
-    name = CharField(max_length=132, null=True, blank=True, verbose_name='Název')
-    airport_city = ForeignKey(City, on_delete=DO_NOTHING, null=True, blank=True, verbose_name='Město')
-
-    def __str__(self):
-        return f"{self.name} - {self.airport_city}"
+class Transportation(Model):
+    departure_airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True,
+                                   related_name='departure_transportation', verbose_name='Letiště odletu')
+    arrival_airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True,
+                                 related_name='arrival_transportation', verbose_name='Letiště příletu')
+    price = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena dopravy')
 
 
 class TravelPackage(Model):
     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
-    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, verbose_name='Strava')
-    departure_airport = ForeignKey(Airport, on_delete=DO_NOTHING, default=None,
-                                   related_name='departure_airport', verbose_name='Letiště odlet')
-    arrival_airport = ForeignKey(Airport, on_delete=DO_NOTHING, default=None, related_name='arrival_airport',
-                                 verbose_name='Letiště přílet')
+    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, related_name='travel_packages', verbose_name='Strava')
+    number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
+    number_of_children = IntegerField(null=True, blank=True, default=0, verbose_name='Počet dětí')
+    transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, null=True, blank=True,
+                                related_name='transportation', verbose_name='Doprava')
     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
     departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-    base_price = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena za osobu')
+    price_per_day_adult = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena za osobu')
+    price_per_day_children = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena za dítě')
     price_modifier = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Upravená cena')
 
     def calculate_total_price(self):
-        return self.base_price + self.price_modifier
+        meal_price = self.meal_plan.price
+        transport_price = self.transportation.price if self.transportation else 0
+        stay = (self.departure_date - self.arrival_date).days
+
+        total_price_per_day_a = meal_price + self.price_per_day_adult + self.price_modifier
+        total_price_per_day_ch = meal_price + self.price_per_day_children + self.price_modifier
+
+        total_price = (total_price_per_day_a * self.number_of_adults +
+                       total_price_per_day_ch * (self.number_of_children or 0)) * stay
+
+        total_price += transport_price
+
+        return Decimal(total_price)
 
     def __str__(self):
         return f"{self.hotel.name} - {self.meal_plan.name}"
 
 
-class Purchase(Model):
-    travel_package = ForeignKey(TravelPackage, on_delete=DO_NOTHING, verbose_name='Cestovní balíček')
-    customer = ForeignKey(User, on_delete=CASCADE, verbose_name='Zákazník')
-    number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
-    number_of_children = IntegerField(null=True, blank=True, verbose_name='Počet dětí')
-    total_price = DecimalField(max_digits=10, decimal_places=2, verbose_name='Cena celkem')
-    special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
-
-    def save(self, *args, **kwargs):
-        travel_package = self.travel_package
-        package_price = travel_package.calculate_total_price()
-
-        total_price = package_price * self.number_of_adults
-        if self.number_of_children:
-            total_price += package_price * self.number_of_children
-
-        self.total_price = total_price
-        super().save(*args, **kwargs)
+class Traveler(Model):
+    first_name = CharField(null=False, blank=False, max_length=68, verbose_name='Jméno')
+    last_name = CharField(null=False, blank=False, max_length=68, verbose_name='Příjmení')
+    birth_date = DateField(null=False, blank=False, default=None, verbose_name='Datum narození')
 
     def __str__(self):
-        return f"{self.customer}- {self.travel_package}"
+        return f"{self.first_name} {self.last_name}"
+
+
+class Purchase(Model):
+    customer = ForeignKey(User, on_delete=CASCADE, verbose_name='Zákazník')
+    total_price = ForeignKey(TravelPackage, on_delete=DO_NOTHING, verbose_name='Cena celkem')
+    travelers = ManyToManyField(Traveler, related_name='travelers_purchases', verbose_name='Cestující')
+    special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
+
+    def __str__(self):
+        return f"{self.customer}- {self.total_price}"
 
 
 class HotelImage(Model):

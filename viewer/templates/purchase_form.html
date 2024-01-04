@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post" action="{% url 'create_purchase' %}">
+  {% csrf_token %}
+  {{ form.as_p }}
+  {% for form in additional_travelers_forms %}
+    {{ form.as_p }}
+  {% endfor %}
+  <button type="submit">Potvrdit rezervaci</button>
+</form>
+{% endblock %}

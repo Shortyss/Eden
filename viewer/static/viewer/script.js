@@ -24,3 +24,14 @@ function showCities(countryId) {
           });
         });
 }
+
+// stars.js
+document.addEventListener('DOMContentLoaded', function () {
+  let stars = document.querySelectorAll('.star');
+
+  stars.forEach(function (star) {
+    star.addEventListener('click', function () {
+      this.querySelector('input').click();
+    });
+  });
+});

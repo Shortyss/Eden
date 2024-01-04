@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Cestovní balíčky</h1>
+<ul>
+    {% for travel_package in travel_packages %}
+    <li>
+        <a href="{% url 'travel_package' travel_package.id %}">{{travel_package}}</a>
+        <a href="{% url 'travel_package_update' travel_package.id %}"><button>Upravit</button></a>
+        <a href="{% url 'travel_package_delete' travel_package.id %}"><button>Smazat</button></a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'travel_package_create' %}"><button>Vytvořit nový</button></a>
+    </li>
+</ul>
+{% endblock %}

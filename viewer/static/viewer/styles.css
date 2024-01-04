@@ -98,3 +98,32 @@ footer {
     display: flex;
     justify-content: center;
 }
+
+/* stars.css */
+.star-rating {
+  font-size: 24px;
+}
+
+.star {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.star input {
+  display: none;
+}
+
+.star label {
+  float: right;
+  color: #ccc;
+}
+
+.star label:before {
+  content: '\2605'; /* Unicode character for a solid star */
+}
+
+.star input:checked ~ label {
+  color: #fdd835; /* Yellow color for checked star */
+}

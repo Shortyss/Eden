@@ -1,8 +1,5 @@
 {% extends "base.html" %}
 
-{% block title %}
-{{ movie.title_orig }}
-{% endblock %}
 
 {% block content %}
 <h1>{{hotel.name}} </h1>
@@ -24,10 +21,44 @@
     <div id="hotel-country">Stát: {{ hotel.city.country }}</div>
     <div class="images">
         {% for image in hotel.get_images %}
-        <div class="image-container"><img src="{{ image.image.url }}" width="150px"></div>
+        <div class="image-container"><img src="{{ image.image.url }}" alt="{{ image.description }}" width="350px"></div>
         {% endfor %}
     </div>
     <div id="hotel-description">Popis: {{ hotel.description }}</div>
+    <h2>Vyberte svůj pobyt:</h2>
+    <form method="post" action="{% url 'create_purchase' %}">
+        {% csrf_token %}
+
+        <label>Datum příjezdu:</label>
+        <input type="date" id="arrival_date" name="arrival_date" required>
+        {% for error in form.errors.arrival_date %}
+            <p class="error">{{ error }}</p>
+        {% endfor %}
+
+        <label for="departure_date">Datum odjezdu:</label>
+        <input type="date" id="departure_date" name="departure_date" required>
+        {% for error in form.errors.departure_date %}
+            <p class="error">{{ error }}</p>
+        {% endfor %}
+
+
+        <label>Výběr stravy:</label>
+        <select id="meal_plan" name="meal_plan" required>
+            {% for meal_plan in meal_plans %}
+                <option value="{{ meal_plan.id }}">{{ meal_plan.name }}</option>
+            {% endfor %}
+        </select>
+
+
+        <label>Doprava:</label>
+        <select id="transport" name="transport" required>
+            <option value="no_transport">Bez dopravy</option>
+            <option value="flight">Letecky</option>
+        </select>
+
+        <button type="submit">Rezervovat</button>
+
+    </form>
     </div>
     {% if request.user.is_authenticated %}
         {% if user_rating %}

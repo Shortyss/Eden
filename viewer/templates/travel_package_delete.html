@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form method="post" enctype="multipart/form-data">
+<form method="post" >
     {% csrf_token %}
-    <table>{{ form.as_p }}</table>
+    <p>
+        Opravdu chcete smazat záznam pro: "{{ object }}" z databáze?
     <input type="submit" value="Potvrdit" class="btn btn-submit">
 </form>
 {% endblock %}

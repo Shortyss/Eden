@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Letiště</h1>
+<ul>
+    {% for airport in airports %}
+    <li>
+        <a href="{% url 'airport' airport.id %}">{{ airport }}</a>
+        <a href="{% url 'airport_update' airport.id %}"><button>Upravit</button></a>
+        <a href="{% url 'airport_delete' airport.id %}"><button>Smazat</button></a>
+    </li>
+    {% endfor %}
+    <li>
+        <a href="{% url 'airport_create' %}"><button>Vytvořit nový</button></a>
+    </li>
+</ul>
+{% endblock %}

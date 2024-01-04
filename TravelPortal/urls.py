@@ -21,7 +21,6 @@ from django.contrib import admin
 from django.contrib.auth.views import LoginView
 from django.urls import path, include
 
-from TravelPortal import settings
 from accounts.views import *
 from viewer.models import *
 from viewer.views import *
@@ -62,8 +61,9 @@ urlpatterns = [
     path('hotel_admin/', HotelView.as_view(), name='hotel_admin'),
     path('hotel/<pk>/', hotel, name='hotel'),
     path('hotel_create/', HotelCreateView.as_view(), name='hotel_create'),
-    path('hotels/update/<pk>', HotelUpdateView.as_view(), name='hotel_update'),
-    path('hotels/delete/<pk>/', HotelDeleteView.as_view(), name='hotel_delete'),
+    path('hotel/update/<pk>', HotelUpdateView.as_view(), name='hotel_update'),
+    path('hotel/delete/<pk>/', HotelDeleteView.as_view(), name='hotel_delete'),
+    path('hotels/', HotelsView.as_view(), name='hotels'),
 
     path('europe/<pk>/', EuropeCountriesView.as_view(), name='europe'),
     path('america/<pk>/', AmericaCountriesView.as_view(), name='america'),
@@ -73,9 +73,29 @@ urlpatterns = [
     path('rate_hotel/', rate_hotel, name='rate_hotel'),
     path('add_comment/', add_comment, name='add_comment'),
 
+    path('airport_admin/', AirportView.as_view(), name='airport_admin'),
+    path('airport/<pk>/', airport, name='airport'),
+    path('airport_create/', AirportCreate.as_view(), name='airport_create'),
+    path('airport/update/<pk>/', AirportUpdate.as_view(), name='airport_update'),
+    path('airport/delete/<pk>/', AirportDelete.as_view(), name='airport_delete'),
+
     path('meal_admin/', MealPlanView.as_view(), name='meal_admin'),
     path('meal/<pk>/', meal, name='meal'),
     path('meal_create/', MealCreate.as_view(), name='meal_create'),
     path('meals/update/<pk>/', MealUpdate.as_view(), name='meal_update'),
     path('meals/delete/<pk>', MealDeleteView.as_view(), name='meal_delete'),
+
+    path('travel_package_admin/', TravelPackageView.as_view(), name='travel_package_admin'),
+    path('travel_package/<pk>/', travel_package, name='travel_package'),
+    path('travel_package_create/', TravelPackageCreate.as_view(), name='travel_package_create'),
+    path('travel_package/update/<pk>/', TravelPackageUpdate.as_view(), name='travel_package_update'),
+    path('travel_package/delete/<pk>/', TravelPackageDelete.as_view(), name='travel_package_delete'),
+
+    path('transportation_admin/', TransportationView.as_view(), name='transportation_admin'),
+    path('transportation/<pk>/', transportation, name='transportation'),
+    path('transportation_create/', TransportationCreate.as_view(), name='transportation_create'),
+    path('transportation/update/<pk>/', TravelPackageUpdate.as_view(), name='transportation_update'),
+    path('transportation/delete/<pk>/', TransportationDelete.as_view(), name='transportation_delete'),
+
+    path('create_purchase/', create_purchase, name='create_purchase'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

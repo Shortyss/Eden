@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+    <h1>Hotely</h1>
+
+    <form method="get" action="">
+        {{ form.as_p }}
+        <div class="star-rating">
+            {% for rating, label in form.star_rating.choices %}
+                <div class="star">
+                    <input type="checkbox" name="star_rating" value="{{ rating }}" id="star{{ rating }}">{% if rating in form.star_rating.data %}checked{% endif %}
+                    <label for="star{{ rating }}">{{ label }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="customer-ratings">
+            <label>Hodnocení zákazníků:</label>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="20" id="rating20">{% if '20' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating20">20 a více</label>
+            </div>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="40" id="rating40">{% if '40' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating40">40 a více</label>
+            </div>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="60" id="rating60">{% if '60' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating60">60 a více</label>
+            </div>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="70" id="rating70">{% if '70' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating70">70 a více</label>
+            </div>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="80" id="rating80">{% if '80' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating80">80 a více</label>
+            </div>
+            <div class="rating-option">
+                <input type="checkbox" name="customer_rating" value="90" id="rating90">{% if '90' in form.customer_rating.data %}checked{% endif %}
+                <label for="rating90">90 a více</label>
+            </div>
+        </div>
+
+        <label>Sort by Price:</label>
+        <select name="sort_by_price">
+            <option value="">--</option>
+            <option value="asc">Ascending</option>
+            <option value="desc">Descending</option>
+        </select>
+        <button type="submit">Filtrovat</button>
+    </form>
+
+    <ul>
+        {% for hotel in hotels %}
+            <li>
+                <a href="{% url 'hotel' hotel.id %}">{{ hotel }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <script src="{% static 'stars.js' %}"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'stars.css' %}">
+{% endblock %}

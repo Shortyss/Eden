@@ -8,7 +8,9 @@ from django.views import generic
 from django.views.generic import CreateView, UpdateView
 
 from accounts.models import *
-from django.forms import ModelForm, ModelChoiceField, HiddenInput, CharField, EmailField, ImageField
+from django.forms import ModelForm, ModelChoiceField, HiddenInput, CharField, EmailField, ImageField, \
+    ModelMultipleChoiceField, CheckboxSelectMultiple
+
 
 # Create your views here.
 
@@ -35,11 +37,18 @@ class SignUpView(generic.CreateView):
 
 
 class ProfileModelForm(ModelForm):
-    first_name = CharField(label='Jméno', max_length=64)
-    last_name = CharField(label='Příjmení', max_length=64)
-    email = EmailField()
+    first_name = CharField(label='Jméno', max_length=64, required=False)
+    last_name = CharField(label='Příjmení', max_length=64, required=False)
+    email = EmailField(required=False)
     users_image = ImageField(required=False)
+    description = CharField(label='Popis obrázku', max_length=64, required=False)
     phone_number = PhoneNumberField(max_length=15, null=True, blank=True)
+    delete_images = ModelMultipleChoiceField(
+        queryset=UserImage.objects.all(),
+        required=False,
+        widget=CheckboxSelectMultiple,
+        label='Smazat obrázky'
+    )
 
     class Meta:
         model = Profile
@@ -62,6 +71,11 @@ class ProfileModelForm(ModelForm):
         if users_image:
             user_image = UserImage(user=instance, image=users_image)
             user_image.save()
+
+        images_to_delete = self.cleaned_data.get('delete_images')
+
+        if images_to_delete:
+            UserImage.objects.filter(id__in=images_to_delete).delete()
 
         if commit:
             instance.save()
@@ -119,33 +133,26 @@ def profile(request, pk):
 def profile_edit(request):
     user = request.user
     profile = user.profile
+    images = UserImage.objects.filter(user=profile)
 
     if request.method == 'POST':
-        print(request.FILES)
         form = ProfileModelForm(request.POST, request.FILES, instance=user.profile)
         if form.is_valid():
             user.first_name = request.POST.get('first_name')
             user.last_name = request.POST.get('last_name')
             user.email = request.POST.get('email')
-            print(request.POST)
-            print(form.cleaned_data)
-            user.save()
-            print(request.POST)
-            form.save()
 
-            image_path = form.cleaned_data.get('users_image')
-            print(image_path)
+            user.save()
+            form.save()
             user.refresh_from_db()
             user_pk = profile.pk
-            print("Formulář je platný")
             return redirect(reverse('profile', kwargs={'pk': user_pk}))
-        else:
-            print(form.errors)
-            print(request.POST)
-            print(request.FILES)
-            print("Chyby při ukládání do databáze:", form.non_field_errors())
     else:
-        form = ProfileModelForm(instance=user.profile)
+        form = ProfileModelForm(instance=user.profile, initial={
+                                'first_name': user.first_name,
+                                'last_name': user.last_name,
+                                'email': user.email
+        })
 
-    context = {'form': form}
+    context = {'form': form, 'images': images}
     return render(request, 'profile_edit.html', context)

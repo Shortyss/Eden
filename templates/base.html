@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{% static 'viewer/styles.css' %}">
 </head>
 <body>
+    {% if not view.is_popup %}
     <header class="headContainer">
         <a href="{% url 'index' %}" class="headContainer-title"><h1>Eden</h1></a>
     </header>
@@ -38,6 +39,7 @@
         <a href=""><button id="Last minute">Last minute</button> </a>
         <a href="{% url 'administration' %}"><button id="Administration">Administrace</button> </a>
     </nav>
+    {% endif %}
     <main class="article">
         {% block content %}{% endblock %}
     </main>

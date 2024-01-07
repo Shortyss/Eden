@@ -19,11 +19,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.contrib.auth.views import LoginView
-from django.urls import path, include
+from django.urls import path, include, re_path as url
 
 from accounts.views import *
 from viewer.models import *
 from viewer.views import *
+
+from dal import autocomplete
 
 
 urlpatterns = [
@@ -98,4 +100,9 @@ urlpatterns = [
     path('transportation/delete/<pk>/', TransportationDelete.as_view(), name='transportation_delete'),
 
     path('create_purchase/', create_purchase, name='create_purchase'),
+
+    path('airport-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport-autocomplete'),
+    path('country-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country-autocomplete'),
+    path('city-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=City), name='city-autocomplete'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

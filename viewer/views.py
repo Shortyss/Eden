@@ -1,15 +1,19 @@
 from datetime import datetime
 from logging import getLogger
 
+from dal import autocomplete
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django_addanother.views import CreatePopupMixin
+from django_addanother.widgets import AddAnotherWidgetWrapper
 
 from viewer.models import *
 from django.core.files.base import ContentFile
 from django.db.models import Avg, Q
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
     CharField, Textarea, ClearableFileInput, FileField, HiddenInput, FileInput, SelectDateWidget, forms, \
-    CheckboxSelectMultiple, MultipleChoiceField
+    CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.urls import reverse_lazy
@@ -98,10 +102,11 @@ class ContinentView(View):
         return render(request, 'continent_admin.html', context)
 
 
-class ContinentCreateView(CreateView):
+class ContinentCreateView(LoginRequiredMixin, CreateView):
     template_name = 'continent_create.html'
     form_class = ContinentModelForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 class ContinentCountriesView(View):
@@ -129,17 +134,18 @@ class AmericaCountriesView(ContinentCountriesView):
     template_name = 'america.html'
 
 
-class ContinentUpdateView(UpdateView):
+class ContinentUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'continent_create.html'
     model = Continent
     form_class = ContinentModelForm
     success_url = reverse_lazy('administration')
 
 
-class ContinentDeleteView(DeleteView):
+class ContinentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'continent_confirm_delete.html'
     model = Continent
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # COUNTRY
@@ -158,6 +164,12 @@ class CountryModelForm(ModelForm):
         model = Country
         fields = '__all__'
 
+        widgets = {
+            'continent': AddAnotherWidgetWrapper(
+               Select,
+                reverse_lazy('continent_create')
+            )}
+
     def clean_name(self):
         cleaned_data = super().clean()
         name = cleaned_data['name'].strip().title()
@@ -166,15 +178,16 @@ class CountryModelForm(ModelForm):
 
 class CountryView(View):
     def get(self, request):
-        countries_list = Country.objects.all()
+        countries_list = Country.objects.all().order_by('name')
         context = {'countries': countries_list}
         return render(request, 'country_admin.html', context)
 
 
-class CountryCreateView(CreateView):
+class CountryCreateView(CreatePopupMixin, CreateView):
     template_name = 'country_create.html'
     form_class = CountryModelForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 class CountryUpdateView(UpdateView):
@@ -182,12 +195,14 @@ class CountryUpdateView(UpdateView):
     model = Country
     form_class = CountryModelForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class CountryDeleteView(DeleteView):
+class CountryDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'country_confirm_delete.html'
     model = Country
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # City
@@ -205,6 +220,15 @@ class CityModelForm(ModelForm):
         model = City
         fields = '__all__'
 
+        widgets = {
+            'country': AddAnotherWidgetWrapper(
+                autocomplete.ModelSelect2(
+                    url='country-autocomplete',
+                    forward=['country'],
+                ),
+                reverse_lazy('country_create')
+            )}
+
     def cleaned_name(self):
         cleaned_data = super().clean()
         name = cleaned_data['name'].strip().title()
@@ -213,28 +237,31 @@ class CityModelForm(ModelForm):
 
 class CityView(View):
     def get(self, request):
-        cities_list = City.objects.all()
+        cities_list = City.objects.all().order_by('name')
         context = {'cities': cities_list}
         return render(request, 'city_admin.html', context)
 
 
-class CityCreateView(CreateView):
+class CityCreateView(LoginRequiredMixin, CreatePopupMixin, CreateView):
     template_name = 'city_create.html'
     form_class = CityModelForm
     success_url = reverse_lazy('administration')
+    permission_request = 'administration'
 
 
-class CityUpdateView(UpdateView):
+class CityUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'city_create.html'
     model = City
     form_class = CityModelForm
     success_url = reverse_lazy('administration')
+    permission_request = 'administration'
 
 
-class CityDeleteView(DeleteView):
+class CityDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'city_confirm_delete.html'
     model = City
     success_url = reverse_lazy('administration')
+    permission_request = 'administration'
 
 
 # Hotel
@@ -244,6 +271,18 @@ class HotelModelForm(ModelForm):
     class Meta:
         model = Hotel
         fields = '__all__'
+        exclude = ['country']
+
+        widgets = {
+            'city': AddAnotherWidgetWrapper(
+                autocomplete.ModelSelect2(
+                    url='city-autocomplete',
+                    forward=['city'],
+                ),
+                reverse_lazy('city_create')
+            )}
+
+    country = CharField(widget=HiddenInput(), required=False)
 
     images = MultiFileField(min_num=1, max_num=8, max_file_size=1024*1024*5)
 
@@ -368,23 +407,42 @@ class HotelsView(View):
         return render(request, self.template_name, context)
 
 
-class HotelCreateView(CreateView):
+class HotelCreateView(LoginRequiredMixin, CreateView):
     template_name = 'hotel_create.html'
     form_class = HotelModelForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        city = form.cleaned_data.get('city')
+        country = city.country if city else None
+        self.object.country = country
+        self.object.save()
+        return result
 
 
-class HotelUpdateView(UpdateView):
+class HotelUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'hotel_create.html'
     model = Hotel
     form_class = HotelModelForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
+
+    def form_valid(self, form):
+        result = super().form_valid(form)
+        city = form.cleaned_data.get('city')
+        country = city.country if city else None
+        self.object.country = country
+        self.object.save()
+        return result
 
 
-class HotelDeleteView(DeleteView):
+class HotelDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'hotel_confirm_delete.html'
     model = Hotel
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 class HotelFilterForm(Form):
@@ -425,6 +483,12 @@ class AirportForm(ModelForm):
         model = Airport
         fields = '__all__'
 
+        widgets = {
+            'airport_city': AddAnotherWidgetWrapper(
+                Select,
+                reverse_lazy('city_create')
+            )}
+
 
 class AirportView(View):
     def get(self, request):
@@ -433,24 +497,27 @@ class AirportView(View):
         return render(request, 'airport_admin.html', context)
 
 
-class AirportCreate(CreateView):
+class AirportCreate(LoginRequiredMixin, CreatePopupMixin, CreateView):
     template_name = 'airport_create.html'
     model = Airport
     form_class = AirportForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class AirportUpdate(UpdateView):
+class AirportUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'airport_create.html'
     model = Airport
     form_class = AirportForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class AirportDelete(DeleteView):
+class AirportDelete(LoginRequiredMixin, DeleteView):
     template_name = 'Airport_confirm_delete.html'
     model = Airport
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # Meal plan
@@ -476,24 +543,27 @@ class MealPlanView(View):
         return render(request, 'meal_admin.html', context)
 
 
-class MealCreate(CreateView):
+class MealCreate(LoginRequiredMixin, CreateView):
     template_name = 'meal_create.html'
     model = MealPlan
     form_class = MealPlanForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class MealUpdate(UpdateView):
+class MealUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'meal_create.html'
     model = MealPlan
     form_class = MealPlanForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class MealDeleteView(DeleteView):
+class MealDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'meal_confirm_delete.html'
     model = MealPlan
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # Travel packages
@@ -539,11 +609,12 @@ class TravelPackageView(View):
         return render(request, 'travel_package_admin.html', context)
 
 
-class TravelPackageCreate(CreateView):
+class TravelPackageCreate(LoginRequiredMixin, CreateView):
     template_name = 'travel_package_create.html'
     model = TravelPackage
     form_class = TravelPackageForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
     def post(self, request, *args, **kwargs):
         print("POST method called")
@@ -555,26 +626,39 @@ class TravelPackageCreate(CreateView):
         print(f"Arrival Date: {arrival_date}, Departure Date: {departure_date}")
 
 
-class TravelPackageUpdate(UpdateView):
+class TravelPackageUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'travel_package_create.html'
     model = TravelPackage
     form_class = TravelPackageForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class TravelPackageDelete(DeleteView):
+class TravelPackageDelete(LoginRequiredMixin, DeleteView):
     template_name = 'travel_package_delete.html'
     model = TravelPackage
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # Transportation
 
 
-class TransportationForm(ModelForm):
+class TransportationForm(LoginRequiredMixin, CreatePopupMixin, ModelForm):
     class Meta:
         model = Transportation
         fields = '__all__'
+
+        widgets = {
+            'departure_airport': autocomplete.ModelSelect2(
+                url='airport-autocomplete',
+                forward=['arrival_airport'],  # Předáváme informace o příchozím letišti pro filtrování
+            ),
+            'arrival_airport': autocomplete.ModelSelect2(
+                url='airport-autocomplete',
+                forward=['departure_airport'],  # Předáváme informace o odchozím letišti pro filtrování
+            ),
+        }
 
 
 def transportation(request, pk):
@@ -591,24 +675,27 @@ class TransportationView(View):
         return render(request, 'transportation_admin.html', context)
 
 
-class TransportationCreate(CreateView):
+class TransportationCreate(LoginRequiredMixin, CreateView):
     template_name = 'transportation_create.html'
     model = Transportation
     form_class = TransportationForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class TransportationUpdate(UpdateView):
+class TransportationUpdate(LoginRequiredMixin, UpdateView):
     template_name = 'transportation_crete.html'
     model = Transportation
     form_class = TransportationForm
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
-class TransportationDelete(DeleteView):
+class TransportationDelete(LoginRequiredMixin, DeleteView):
     template_name = 'transportation_delete.html'
     model = Transportation
     success_url = reverse_lazy('administration')
+    permission_required = 'administration'
 
 
 # PURCHASE

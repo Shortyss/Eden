@@ -4,6 +4,10 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <table>{{ form.as_p }}</table>
+    {% for image in images %}
+        <img src="{{ image.image.url }}" width="250px">
+        <input type="checkbox" name="delete_images" value="{{ image.id }}">Smazat
+    {% endfor %}
     <input type="submit" value="Potvrdit" class="btn btn-submit">
 </form>
 {% endblock %}

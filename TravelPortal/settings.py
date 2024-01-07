@@ -38,11 +38,15 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_dump_load_utf8',
+    'django_extensions',
+    'django_addanother',
     'rest_framework',
 
     'viewer',
     'accounts',
 
+    'dal',
+    'dal_select2',
 ]
 
 MIDDLEWARE = [
@@ -135,3 +139,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = 'index'
 LOGOUT_REDIRECT_URL = 'index'
+
+GRAPH_MODELS = {
+    'all_applications': True,
+    'graph_models': True,
+}

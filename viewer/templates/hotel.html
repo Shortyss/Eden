@@ -18,7 +18,7 @@
     {% endfor %}
     </div>
     <div id="hotel-city">Město: {{ hotel.city }}</div>
-    <div id="hotel-country">Stát: {{ hotel.city.country }}</div>
+    <div id="hotel-country">Stát: {{ hotel.country.name }}</div>
     <div class="images">
         {% for image in hotel.get_images %}
         <div class="image-container"><img src="{{ image.image.url }}" alt="{{ image.description }}" width="350px"></div>

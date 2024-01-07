@@ -40,7 +40,5 @@ class Profile(Model):
 class UserImage(Model):
     user = ForeignKey(Profile, on_delete=DO_NOTHING)
     image = ImageField(upload_to='users_image/')
-    description = CharField(max_length=64, null=True, blank=True)
 
-    def __str__(self):
-        return self.description if self.description else "No description"
+

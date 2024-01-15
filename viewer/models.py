@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from _decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -28,15 +30,25 @@ class Country(Model):
         return f"{self.name}"
 
 
+class Island(Model):
+    name = CharField(max_length=132, null=True, blank=True, verbose_name='Ostrov')
+    country = ForeignKey(Country, null=True, blank=True, on_delete=CASCADE, related_name='cities', verbose_name='Stát')
+
+    def __str__(self):
+        return f"{self.name} - {self.country}"
+
+
 class City(Model):
     name = CharField(max_length=132, null=False, blank=False, unique=True, verbose_name='Název')
     country = ForeignKey(Country, null=True, blank=True, on_delete=CASCADE, default=None, verbose_name='Stát')
+    island = ForeignKey(Island, null=True, blank=True, on_delete=CASCADE, default=None, related_name='cities',
+                        verbose_name='Ostrov')
 
     class Meta:
         verbose_name_plural = "Cities"
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} - {self.country or self.island}"
 
 
 class Airport(Model):
@@ -44,17 +56,16 @@ class Airport(Model):
     airport_city = ForeignKey(City, on_delete=DO_NOTHING, null=True, blank=True, verbose_name='Město')
 
     def __str__(self):
-        return f"{self.name} - {self.airport_city}"
+        return f"{self.airport_city} - {self.name}"
 
 
 class Hotel(Model):
     name = CharField(max_length=132, null=False, blank=False, verbose_name='Název')
     city = ForeignKey(City, on_delete=DO_NOTHING, related_name='hotels_of_cities', verbose_name='Město')
-    country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country', verbose_name='Stát')
-    airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True, related_name='hotel_airport', verbose_name='Letiště')
-
-    total_rooms = IntegerField(default=0, verbose_name='Celkový počet pokojů')
-    booked_rooms = IntegerField(default=0, verbose_name='Rezervované pokoje')
+    country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country',
+                         verbose_name='Stát')
+    airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True, related_name='hotel_airport',
+                         verbose_name='Letiště')
     single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')
     double_rooms = IntegerField(default=0, verbose_name='Dvoulůžkové pokoje')
     family_rooms = IntegerField(default=0, verbose_name='Rodinné pokoje')
@@ -69,20 +80,6 @@ class Hotel(Model):
     ])
     description = TextField(null=True, blank=True, verbose_name='Popis')
     images = MultiFileField(min_num=1, max_num=6, max_file_size=1024 * 1024 * 5, required=False)
-
-    def available_rooms(self, room_type=None):
-        if room_type is None:
-            return self.total_rooms - self.booked_rooms
-        elif room_type == 'single':
-            return self.single_rooms - self.booked_rooms
-        elif room_type == 'double':
-            return self.double_rooms - self.booked_rooms
-        elif room_type == 'family':
-            return self.family_rooms - self.booked_rooms
-        elif room_type == 'suite':
-            return self.suites - self.booked_rooms
-        else:
-            return 0
 
     def get_images(self):
         return HotelImage.objects.filter(hotel=self)
@@ -110,30 +107,51 @@ class Transportation(Model):
 class TravelPackage(Model):
     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
     meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, related_name='travel_packages', verbose_name='Strava')
+
+    number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
+                                          verbose_name='Počet jednolůžkových pokojů')
+    number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
+    number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
+    number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
+    number_of_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Celkový počet pokojů')
+    room_type = CharField(max_length=16, choices=[
+        ('single', 'Jednolůžkový'),
+        ('double', 'Dvoulůžkový'),
+        ('family', 'Rodinný'),
+        ('suite', 'Apartmán'),
+    ], null=True, blank=True, verbose_name='Typ pokoje')
+
     number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
     number_of_children = IntegerField(null=True, blank=True, default=0, verbose_name='Počet dětí')
+
     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, null=True, blank=True,
                                 related_name='transportation', verbose_name='Doprava')
     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
     departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-    price_per_day_adult = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena za osobu')
-    price_per_day_children = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena za dítě')
-    price_modifier = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Upravená cena')
 
     def calculate_total_price(self):
         meal_price = self.meal_plan.price
-        transport_price = self.transportation.price if self.transportation else 0
-        stay = (self.departure_date - self.arrival_date).days
+        transport_price = self.transportation.price if self.transportation else Decimal(0)
 
-        total_price_per_day_a = meal_price + self.price_per_day_adult + self.price_modifier
-        total_price_per_day_ch = meal_price + self.price_per_day_children + self.price_modifier
+        stay_dates = [self.arrival_date + timedelta(days=n) for n in
+                      range((self.departure_date - self.arrival_date).days + 1)]
 
-        total_price = (total_price_per_day_a * self.number_of_adults +
-                       total_price_per_day_ch * (self.number_of_children or 0)) * stay
+        total_price = Decimal(0)
 
+        for date in stay_dates:
+            price_entry = Prices.objects.filter(
+                hotel=self.hotel,
+                arrival_date__lte=date,
+                departure_date__gte=date
+            ).first()
+
+            if price_entry:
+                total_price += getattr(price_entry, f"price_{self.room_type}") * self.number_of_rooms
+
+        total_price += meal_price * (self.number_of_adults + (self.number_of_children or 0))
         total_price += transport_price
 
-        return Decimal(total_price)
+        return total_price
 
     def __str__(self):
         return f"{self.hotel.name} - {self.meal_plan.name}"
@@ -156,6 +174,23 @@ class Purchase(Model):
 
     def __str__(self):
         return f"{self.customer}- {self.total_price}"
+
+
+class Prices(Model):
+    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
+    arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
+    departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
+    price_single_room = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                                     verbose_name='Cena za jednolůžkový pokoj')
+    price_double_room = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                                     verbose_name='Cena za dvoulůžkový pokoj')
+    price_family_room = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                                     verbose_name='Cena za rodinný pokoj')
+    price_suite = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                               verbose_name='Cena za apartmán')
+
+    def __str__(self):
+        return f"{self.hotel.name} - {self.arrival_date} to {self.departure_date}"
 
 
 class HotelImage(Model):

@@ -21,9 +21,11 @@ from django.contrib import admin
 from django.contrib.auth.views import LoginView
 from django.urls import path, include, re_path as url
 
+import api
 from accounts.views import *
 from viewer.models import *
 from viewer.views import *
+from api.views import *
 
 from dal import autocomplete
 
@@ -48,11 +50,18 @@ urlpatterns = [
     path('continents/update/<pk>/', ContinentUpdateView.as_view(), name='continent_update'),
     path('continents/delete/<pk>/', ContinentDeleteView.as_view(), name='continent_delete'),
 
-    path('country_admin', CountryView.as_view(), name='country_admin'),
+    path('country_admin/', CountryView.as_view(), name='country_admin'),
     path('country/<pk>/', country, name='country'),
     path('country_create/', CountryCreateView.as_view(), name='country_create'),
     path('countries/update/<pk>/', CountryUpdateView.as_view(), name='country_update'),
     path('countries/delete/<pk>/', CountryDeleteView.as_view(), name='country_delete'),
+
+    path('island_admin/', IslandView.as_view(), name='island_admin'),
+    path('islands/', IslandView.as_view(), name='islands'),
+    path('island/<pk>/', island, name='island'),
+    path('island_create/', IslandCreateView.as_view(), name='island_create'),
+    path('island/update/<pk>/', IslandUpdate.as_view(), name='island_update'),
+    path('island/delete/<pk>/', IslandDelete.as_view(), name='island_delete'),
 
     path('city_admin/', CityView.as_view(), name='city_admin'),
     path('city/<pk>/', city, name='city'),
@@ -104,5 +113,11 @@ urlpatterns = [
     path('airport-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport-autocomplete'),
     path('country-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country-autocomplete'),
     path('city-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=City), name='city-autocomplete'),
+
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('api/travel_package/', api.views.TravelPackages.as_view()),
+    path('api/prices_api/<pk>/', api.views.PricesAPI.as_view()),
+    path('api/transportation_api/<pk>/', api.views.TransportationAPI.as_view()),
+    path('api/meal_plan_api/<pk>/', api.views.MealPlanAPI.as_view()),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

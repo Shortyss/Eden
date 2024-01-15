@@ -10,44 +10,27 @@
             {% for rating, label in form.star_rating.choices %}
                 <div class="star">
                     <input type="checkbox" name="star_rating" value="{{ rating }}" id="star{{ rating }}">{% if rating in form.star_rating.data %}checked{% endif %}
-                    <label for="star{{ rating }}">{{ label }}</label>
+                    <label for="star{{ rating }}">{{ label }} a více</label>
                 </div>
             {% endfor %}
         </div>
 
-        <div class="customer-ratings">
-            <label>Hodnocení zákazníků:</label>
+        <label>Hodnocení zákazníků:</label>
+        {% for rating, label in form.customer_rating.choices %}
             <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="20" id="rating20">{% if '20' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating20">20 a více</label>
+                <input type="checkbox" name="customer_rating" value="{{ rating }}" id="rating{{ rating }}">{% if rating in form.customer_rating.data %}checked{% endif %}
+                <label for="rating{{ rating }}">{{ label }} a více</label>
             </div>
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="40" id="rating40">{% if '40' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating40">40 a více</label>
-            </div>
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="60" id="rating60">{% if '60' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating60">60 a více</label>
-            </div>
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="70" id="rating70">{% if '70' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating70">70 a více</label>
-            </div>
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="80" id="rating80">{% if '80' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating80">80 a více</label>
-            </div>
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="90" id="rating90">{% if '90' in form.customer_rating.data %}checked{% endif %}
-                <label for="rating90">90 a více</label>
-            </div>
-        </div>
+        {% endfor %}
 
-        <label>Sort by Price:</label>
+        <label for="search_name">Hledat podle názvu (min. 3 písmena):</label>
+        <input type="text" name="search_name" id="search_name" value="{{ form.search_name.value }}" minlength="3">
+
+        <label>Řazení podle ceny:</label>
         <select name="sort_by_price">
             <option value="">--</option>
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
+            <option value="asc">Od nejlevnějšího</option>
+            <option value="desc">Od nejdražšího</option>
         </select>
         <button type="submit">Filtrovat</button>
     </form>

@@ -5,6 +5,7 @@ from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.views.generic import ListView
 from django_addanother.views import CreatePopupMixin
 from django_addanother.widgets import AddAnotherWidgetWrapper
 
@@ -13,7 +14,7 @@ from django.core.files.base import ContentFile
 from django.db.models import Avg, Q
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
     CharField, Textarea, ClearableFileInput, FileField, HiddenInput, FileInput, SelectDateWidget, forms, \
-    CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple
+    CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple, DateInput
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.urls import reverse_lazy
@@ -115,6 +116,8 @@ class ContinentCountriesView(View):
     def get(self, request, pk):
         continent_object = Continent.objects.get(id=pk)
         countries = Country.objects.filter(continent=continent_object)
+        print(countries)
+        print(continent_object)
         return render(request, self.template_name, {'countries': countries})
 
 
@@ -205,6 +208,77 @@ class CountryDeleteView(LoginRequiredMixin, DeleteView):
     permission_required = 'administration'
 
 
+# Island
+
+
+def island(request, pk):
+    island_object = Island.objects.get(id=pk)
+    cities = City.objects.filter(island=island_object)
+    context = {'island': island_object, 'cities': cities}
+    return render(request, 'island.html', context)
+
+
+class IslandModelForm(ModelForm):
+    class Meta:
+        model = Island
+        fields = '__all__'
+
+        widgets = {
+            'country': AddAnotherWidgetWrapper(
+                autocomplete.ModelSelect2(
+                    url='country-autocomplete',
+                    forward=['country'],
+                ),
+                reverse_lazy('country_create')
+            ),
+            'city': AddAnotherWidgetWrapper(
+                autocomplete.ModelSelect2(
+                    url='city-autocomplete',
+                    forward=['city'],
+                ),
+                reverse_lazy('city_create')
+            )
+        }
+
+        def cleaned_name(self):
+            cleaned_data = super().clean()
+            name = cleaned_data['name'].strip().title()
+            return name
+
+
+class IslandView(View):
+    def get(self, request):
+        user_role = 'administration'
+
+        if user_role == 'administration':
+            island_list = Island.objects.all().order_by('name')
+            context = {'islands': island_list}
+            return render(request, 'island_admin.html', context)
+        else:
+            return render(request, 'islands.html')
+
+
+class IslandCreateView(LoginRequiredMixin, CreatePopupMixin, CreateView):
+    template_name = 'island_create.html'
+    form_class = IslandModelForm
+    success_url = reverse_lazy('administration')
+    permission_request = 'administration'
+
+
+class IslandUpdate(LoginRequiredMixin, UpdateView):
+    template_name = 'island_create.html'
+    form_class = IslandModelForm
+    success_url = reverse_lazy('administration')
+    permission_required = 'administration'
+
+
+class IslandDelete(LoginRequiredMixin, DeleteView):
+    template_name = 'Island_delete.html'
+    model = Island
+    success_url = reverse_lazy('administration')
+    permission_required = 'administration'
+
+
 # City
 
 
@@ -264,6 +338,36 @@ class CityDeleteView(LoginRequiredMixin, DeleteView):
     permission_request = 'administration'
 
 
+# Price
+
+
+class PricesForm(ModelForm):
+    class Meta:
+        model = Prices
+        fields = '__all__'
+        widgets = {
+            'arrival_date': DateInput(attrs={'type': 'date'}),
+            'departure_date': DateInput(attrs={'type': 'date'})
+        }
+
+
+def add_price(request):
+    if request.method == 'POST':
+        print('add_price')
+        form = PricesForm(request.POST)
+        if form.is_valid():
+            form.save()
+            print('uloženo')
+        return redirect('administration')
+    else:
+        print('mimo_add_price')
+        form = PricesForm()
+
+    return render(request, 'add_price.html', {'form': form})
+
+
+HotelPricesFormSet = inlineformset_factory(Hotel, Prices, form=PricesForm, extra=7, can_delete=True)
+
 # Hotel
 
 
@@ -271,7 +375,7 @@ class HotelModelForm(ModelForm):
     class Meta:
         model = Hotel
         fields = '__all__'
-        exclude = ['country']
+        exclude = ['country', 'Island']
 
         widgets = {
             'city': AddAnotherWidgetWrapper(
@@ -281,10 +385,11 @@ class HotelModelForm(ModelForm):
                 ),
                 reverse_lazy('city_create')
             )}
+    prices = HotelPricesFormSet()
 
     country = CharField(widget=HiddenInput(), required=False)
 
-    images = MultiFileField(min_num=1, max_num=8, max_file_size=1024*1024*5)
+    images = MultiFileField(required=False, min_num=1, max_num=8, max_file_size=1024*1024*5)
 
     def clean_name(self):
         initial_form = super().clean()
@@ -329,14 +434,33 @@ def hotel(request, pk):
 
     meal_plans = MealPlan.objects.all()
 
+    prices = Prices.objects.filter(hotel=hotel_object)
+
     current_travel_package = travel_packages.first()
+
+    if request.method == 'POST':
+        single_rooms = int(request.POST.get('single_rooms', 0))
+        double_rooms = int(request.POST.get('double_rooms', 0))
+        family_rooms = int(request.POST.get('family_rooms', 0))
+        suite_rooms = int(request.POST.get('suite_rooms', 0))
+
+        request.session['room_counts'] = {
+            'single_rooms': single_rooms,
+            'double_rooms': double_rooms,
+            'family_rooms': family_rooms,
+            'suite_rooms': suite_rooms,
+        }
+
+        return redirect('create_purchase')
+
     travel_package = TravelPackage
     arrival_date = travel_package.arrival_date
     departure_date = travel_package.departure_date
 
     context = {'hotel': hotel_object, 'avg_rating': avg_rating,
                'user_rating': user_rating, 'comments': comments, 'images': images, 'travel_packages': travel_packages,
-               'meal_plans': meal_plans, 'arrival_date': arrival_date, 'departure_date': departure_date}
+               'meal_plans': meal_plans, 'arrival_date': arrival_date, 'departure_date': departure_date,
+               'prices': prices}
     return render(request, 'hotel.html', context)
 
 
@@ -348,33 +472,29 @@ class HotelView(View):
 
 
 class HotelsView(View):
-    template_name = 'hotels.html'
-
     def get(self, request):
         form = HotelFilterForm(request.GET)
 
         queryset = Hotel.objects.all()
 
         if form.is_valid():
-            continents = form.cleaned_data.get('continents')
+            continents = form.cleaned_data.get('continent')
             countries = form.cleaned_data.get('countries')
             cities = form.cleaned_data.get('cities')
             min_price = form.cleaned_data.get('min_price')
             max_price = form.cleaned_data.get('max_price')
             search_name = form.cleaned_data.get('search_name')
-            star_rating = form.cleaned_data.get('star_rating', [])
-            if isinstance(star_rating, list) and len(star_rating) == 1:
-                star_rating = star_rating[0]
 
-            if star_rating:
-                queryset = queryset.filter(star_rating=star_rating)
+            selected_star_ratings = form.cleaned_data.get('star_rating', [])
+            if selected_star_ratings:
+                queryset = queryset.filter(star_rating__in=selected_star_ratings)
 
-            customer_rating_options = ['20', '40', '60', '70', '80', '90']
-            selected_customer_ratings = [option for option in customer_rating_options if
-                                         option in form.cleaned_data.get('customer_rating', [])]
-
+            selected_customer_ratings = form.cleaned_data.get('customer_rating', [])
             if selected_customer_ratings:
-                queryset = queryset.filter(customer_rating__gte=min(map(int, selected_customer_ratings)))
+
+                customer_rating_values = [int(rating) for rating in selected_customer_ratings]
+
+                queryset = queryset.filter(rating__rating__gte=max(customer_rating_values))
 
             if continents:
                 queryset = queryset.filter(city__country__continent__in=continents)
@@ -382,13 +502,11 @@ class HotelsView(View):
                 queryset = queryset.filter(city__country__in=countries)
             if cities:
                 queryset = queryset.filter(city__in=cities)
-            if star_rating:
-                queryset = queryset.filter(star_rating=star_rating)
             if min_price:
                 queryset = queryset.filter(price__gte=min_price)
             if max_price:
                 queryset = queryset.filter(price__lte=max_price)
-            if search_name:
+            if search_name and len(search_name) >= 3:
                 queryset = queryset.filter(name__icontains=search_name)
 
         # Řazení podle ceny
@@ -404,7 +522,7 @@ class HotelsView(View):
             'hotels': hotels,
             'form': form,
         }
-        return render(request, self.template_name, context)
+        return render(request, 'hotels.html', context)
 
 
 class HotelCreateView(LoginRequiredMixin, CreateView):
@@ -414,12 +532,29 @@ class HotelCreateView(LoginRequiredMixin, CreateView):
     permission_required = 'administration'
 
     def form_valid(self, form):
-        result = super().form_valid(form)
+        self.object = form.save(commit=False)
         city = form.cleaned_data.get('city')
         country = city.country if city else None
         self.object.country = country
         self.object.save()
-        return result
+
+        prices_formset = HotelPricesFormSet(self.request.POST, instance=self.object)
+
+        if prices_formset.is_valid():
+            prices_formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form, prices_formset)
+
+    def form_invalid(self, form, prices_formset):
+        return self.render_to_response(self.get_context_data(form=form, prices_formset=prices_formset))
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        data['city'] = None
+        data['country'] = None
+        data['prices_formset'] = HotelPricesFormSet(instance=self.object)
+        return data
 
 
 class HotelUpdateView(LoginRequiredMixin, UpdateView):
@@ -430,12 +565,36 @@ class HotelUpdateView(LoginRequiredMixin, UpdateView):
     permission_required = 'administration'
 
     def form_valid(self, form):
-        result = super().form_valid(form)
+        print('Jsme tu')
+        self.object = form.save(commit=False)
         city = form.cleaned_data.get('city')
         country = city.country if city else None
         self.object.country = country
         self.object.save()
-        return result
+
+        prices_formset = HotelPricesFormSet(self.request.POST, instance=self.object)
+        print('tady za cenou')
+        # add_price(self.request)
+        if prices_formset.is_valid():
+            prices_formset.save()
+            print('uloženo')
+            return super().form_valid(form)
+        else:
+            print('neuloženo')
+            return self.form_invalid(form)
+
+    def form_invalid(self, form):
+        prices_formset = HotelPricesFormSet(self.request.POST, instance=self.object)
+        print("Main Form Errors:", form.errors)
+        print("Formset Errors:", prices_formset.errors)
+        return self.render_to_response(self.get_context_data(form=form, prices_formset=prices_formset))
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        data['city'] = None
+        data['country'] = None
+        data['prices_formset'] = HotelPricesFormSet(instance=self.object)
+        return data
 
 
 class HotelDeleteView(LoginRequiredMixin, DeleteView):
@@ -446,9 +605,12 @@ class HotelDeleteView(LoginRequiredMixin, DeleteView):
 
 
 class HotelFilterForm(Form):
-    continent = ModelMultipleChoiceField(queryset=Continent.objects.all(), required=False, label='Podle kontinentu')
-    countries = ModelMultipleChoiceField(queryset=Country.objects.all(), required=False, label='Podle země')
-    cities = ModelMultipleChoiceField(queryset=City.objects.all(), required=False, label='Podle města')
+    continent = ModelMultipleChoiceField(queryset=Continent.objects.all(), required=False, label='Podle kontinentu',
+                                         widget=CheckboxSelectMultiple)
+    countries = ModelMultipleChoiceField(queryset=Country.objects.all(), required=False, label='Podle země',
+                                         widget=CheckboxSelectMultiple)
+    cities = ModelMultipleChoiceField(queryset=City.objects.all(), required=False, label='Podle města',
+                                      widget=CheckboxSelectMultiple)
     STAR_RATINGS = [
         ('1', '⭐'),
         ('2', '⭐⭐'),
@@ -464,9 +626,23 @@ class HotelFilterForm(Form):
         label='Podle počtu hvězdiček',
     )
 
+    CUSTOMER_RATING_CHOICES = [
+        ('60', '60 a více'),
+        ('70', '70 a více'),
+        ('80', '80 a více'),
+        ('90', '90 a více'),
+    ]
+
+    customer_rating = MultipleChoiceField(
+        choices=CUSTOMER_RATING_CHOICES,
+        widget=CheckboxSelectMultiple,
+        required=False,
+        label='Hodnocení zákaznůků '
+    )
+
     min_price = DecimalField(validators=[MinValueValidator(0)])
     max_price = DecimalField(validators=[MinValueValidator(0)])
-    search_name = CharField(max_length=100, required=False, label='Vyhledat podle názvu')
+
 
 # Airport
 
@@ -716,8 +892,16 @@ def create_purchase(request):
             purchase.customer = request.user
             purchase.save()
 
+            request.session.pop('room_counts', None)
+
             return render(request, 'purchase_success.html', {'purchase': purchase})
     else:
         form = PurchaseForm()
+
+        room_counts = request.session.get('room_counts', {})
+        form.fields['single_rooms'].initial = room_counts.get('single_rooms', 0)
+        form.fields['double_rooms'].initial = room_counts.get('double_rooms', 0)
+        form.fields['family_rooms'].initial = room_counts.get('family_rooms', 0)
+        form.fields['suite_rooms'].initial = room_counts.get('suite_rooms', 0)
 
     return render(request, 'purchase_form.html', {'form': form})

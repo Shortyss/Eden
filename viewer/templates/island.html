@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Města na ostrově: {{ island }}</h1>
+  {% if cities %}
+    <ul>
+      {% for city in cities %}
+        <li><a href="{% url 'city' city.id %}">{{city}}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné města na ostrově nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

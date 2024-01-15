@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 
+{% load static %}
 
 {% block content %}
 <h1>{{hotel.name}} </h1>
 <div class="hotel-details">
+    <div id="hotel-data" data-hotel-id="{{ hotel.id }}"></div>
     <div class="hotel-avg-rating">Průměrné hodnocení:
         {% if avg_rating %}
             {{ avg_rating.rating__avg |floatformat:"0"}}
@@ -41,6 +43,60 @@
             <p class="error">{{ error }}</p>
         {% endfor %}
 
+       <label>Výběr typu pokoje: </label>
+
+        <div id="room_types">
+            <label for="single_rooms">Počet jednolůžkových pokojů:</label>
+            <input type="number" id="single_rooms" name="single_rooms" min="0" value="0">
+
+            <label for="adults_single_rooms">Dospělí:</label>
+            <input type="number" id="adults_single_rooms" name="adults_single_rooms" min="0" value="0">
+            <span id="error_adults_single_rooms" class="error-text"></span>
+
+            <label for="children_single_rooms">Děti:</label>
+            <input type="number" id="children_single_rooms" name="children_single_rooms" min="0" max="0" value="0">
+            <span id="error_children_single_rooms" class="error-text"></span>
+        </div>
+
+        <div>
+            <label for="double_rooms">Počet dvoulůžkových pokojů:</label>
+            <input type="number" id="double_rooms" name="double_rooms" min="0" value="0">
+
+            <label for="adults_double_rooms">Dospělí:</label>
+            <input type="number" id="adults_double_rooms" name="adults_double_rooms" min="0" value="0">
+            <span id="error_adults_double_rooms" class="error-text"></span>
+
+            <label for="children_double_rooms">Děti:</label>
+            <input type="number" id="children_double_rooms" name="children_double_rooms" min="0" value="0">
+            <span id="error_children_double_rooms" class="error-text"></span>
+        </div>
+
+        <div>
+            <label for="family_rooms">Počet rodinných pokojů:</label>
+            <input type="number" id="family_rooms" name="family_rooms" min="0" value="0">
+
+            <label for="adults_family_rooms">Dospělí:</label>
+            <input type="number" id="adults_family_rooms" name="adults_family_rooms" min="0" value="0">
+            <span id="error_adults_family_rooms" class="error-text"></span>
+
+            <label for="children_family_rooms">Děti:</label>
+            <input type="number" id="children_family_rooms" name="children_family_rooms" min="0" value="0">
+            <span id="error_children_family_rooms" class="error-text"></span>
+        </div>
+
+        <div>
+            <label for="suite_rooms">Počet apartmánů:</label>
+            <input type="number" id="suite_rooms" name="suite_rooms" min="0" value="0">
+
+            <label for="adults_suite_rooms">Dospělí:</label>
+            <input type="number" id="adults_suite_rooms" name="adults_suite_rooms" min="0" value="0">
+            <span id="error_adults_suite_rooms" class="error-text"></span>
+
+            <label for="children_suite_rooms">Děti:</label>
+            <input type="number" id="children_suite_rooms" name="children_suite_rooms" min="0" value="0">
+            <div id="person_error_message" style="color: red;"></div>
+        </div>
+
 
         <label>Výběr stravy:</label>
         <select id="meal_plan" name="meal_plan" required>
@@ -56,7 +112,9 @@
             <option value="flight">Letecky</option>
         </select>
 
-        <button type="submit">Rezervovat</button>
+        <span id="total_price">Celková cena: {{ totalPrice }} Kč</span>
+
+        <button id="reservation_button" type="submit">Rezervovat</button>
 
     </form>
     </div>
@@ -104,4 +162,7 @@
 
     {% endfor %}
 </div>
+
+<script src="{% static 'viewer/script.js' %}"></script>
+
 {% endblock %}

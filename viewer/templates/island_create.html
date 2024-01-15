@@ -6,13 +6,9 @@
 <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <table>
-        {{ form.as_table }}
-        {{ prices_formset.management_form }}
-        {% for form in prices_formset.forms %}
-            {{ form.as_table }}
-        {% endfor %}
+        {{ form }}
         <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-        {{ prices_formset.media }}
+        {{ form.media }}
     </table>
     <input type="submit" value="Potvrdit" class="btn btn-submit">
 </form>

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Ostrovy:</h1>
+  {% if islands %}
+    <ul>
+      {% for island in islands %}
+        <li><a href="{% url 'island' island.id %}">{{ island }}</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Žádné ostrovy nebyly nalezeny.</p>
+  {% endif %}
+{% endblock %}

@@ -44,6 +44,7 @@ INSTALLED_APPS = [
 
     'viewer',
     'accounts',
+    'api',
 
     'dal',
     'dal_select2',

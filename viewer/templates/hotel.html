@@ -28,7 +28,7 @@
     </div>
     <div id="hotel-description">Popis: {{ hotel.description }}</div>
     <h2>Vyberte svůj pobyt:</h2>
-    <form method="post" action="{% url 'create_purchase' %}">
+    <form method="post" action="{% url 'purchase_create' %}">
         {% csrf_token %}
 
         <label>Datum příjezdu:</label>
@@ -112,7 +112,11 @@
             <option value="{{ hotel.transportation.id }}" selected>Letecky</option>
         </select>
 
+        <span id="traveler">Celkem cestujících: {{ totalTravelers }}</span>
         <span id="total_price">Celková cena: {{ totalPrice }} Kč</span>
+
+        <input type="hidden" id="hotel_id" name="hotel" value="{{ hotel.id }}">
+        <input type="hidden" id="user_id" name="user" value="{{ request.user.id }}">
 
         <button id="reservation_button" type="submit">Rezervovat</button>
 

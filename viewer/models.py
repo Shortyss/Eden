@@ -107,58 +107,58 @@ class MealPlan(Model):
         return f"{self.name}, {self.price}"
 
 
-class TravelPackage(Model):
-    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
-    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, related_name='travel_packages', verbose_name='Strava')
-
-    number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
-                                          verbose_name='Počet jednolůžkových pokojů')
-    number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
-    number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
-    number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
-    number_of_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Celkový počet pokojů')
-    room_type = CharField(max_length=16, choices=[
-        ('single', 'Jednolůžkový'),
-        ('double', 'Dvoulůžkový'),
-        ('family', 'Rodinný'),
-        ('suite', 'Apartmán'),
-    ], null=True, blank=True, verbose_name='Typ pokoje')
-
-    number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
-    number_of_children = IntegerField(null=True, blank=True, default=0, verbose_name='Počet dětí')
-
-    transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, null=True, blank=True,
-                                related_name='transportation', verbose_name='Doprava')
-    arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
-    departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-
-    def calculate_total_price(self):
-        meal_price = self.meal_plan.price
-        transport_price = self.transportation.price if self.transportation else Decimal(0)
-
-        stay_dates = [self.arrival_date + timedelta(days=n) for n in
-                      range((self.departure_date - self.arrival_date).days + 1)]
-
-        total_price = Decimal(0)
-
-        for date in stay_dates:
-            price_entry = Prices.objects.filter(
-                hotel=self.hotel,
-                arrival_date__lte=date,
-                departure_date__gte=date
-            ).first()
-
-            if price_entry:
-                total_price += getattr(price_entry, f"price_{self.room_type}") * self.number_of_rooms
-
-        total_price += meal_price * (self.number_of_adults + (self.number_of_children or 0))
-        total_price += transport_price
-
-        return total_price
-
-    def __str__(self):
-        return f"{self.hotel.name} - {self.meal_plan.name}"
-
+# class TravelPackage(Model):
+#     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
+#     meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, related_name='travel_packages', verbose_name='Strava')
+#
+#     number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
+#                                           verbose_name='Počet jednolůžkových pokojů')
+#     number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
+#     number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
+#     number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
+#     number_of_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Celkový počet pokojů')
+#     room_type = CharField(max_length=16, choices=[
+#         ('single', 'Jednolůžkový'),
+#         ('double', 'Dvoulůžkový'),
+#         ('family', 'Rodinný'),
+#         ('suite', 'Apartmán'),
+#     ], null=True, blank=True, verbose_name='Typ pokoje')
+#
+#     number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
+#     number_of_children = IntegerField(null=True, blank=True, default=0, verbose_name='Počet dětí')
+#
+#     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, null=True, blank=True,
+#                                 related_name='transportation', verbose_name='Doprava')
+#     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
+#     departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
+#
+#     def calculate_total_price(self):
+#         meal_price = self.meal_plan.price
+#         transport_price = self.transportation.price if self.transportation else Decimal(0)
+#
+#         stay_dates = [self.arrival_date + timedelta(days=n) for n in
+#                       range((self.departure_date - self.arrival_date).days + 1)]
+#
+#         total_price = Decimal(0)
+#
+#         for date in stay_dates:
+#             price_entry = Prices.objects.filter(
+#                 hotel=self.hotel,
+#                 arrival_date__lte=date,
+#                 departure_date__gte=date
+#             ).first()
+#
+#             if price_entry:
+#                 total_price += getattr(price_entry, f"price_{self.room_type}") * self.number_of_rooms
+#
+#         total_price += meal_price * (self.number_of_adults + (self.number_of_children or 0))
+#         total_price += transport_price * (self.number_of_adults + (self.number_of_children or 0))
+#
+#         return total_price
+#
+#     def __str__(self):
+#         return f"{self.hotel.name} - {self.meal_plan.name} - {self.calculate_total_price}"
+#
 
 class Traveler(Model):
     first_name = CharField(null=False, blank=False, max_length=68, verbose_name='Jméno')
@@ -170,9 +170,23 @@ class Traveler(Model):
 
 
 class Purchase(Model):
-    customer = ForeignKey(User, on_delete=CASCADE, verbose_name='Zákazník')
-    total_price = ForeignKey(TravelPackage, on_delete=DO_NOTHING, verbose_name='Cena celkem')
-    travelers = ManyToManyField(Traveler, related_name='travelers_purchases', verbose_name='Cestující')
+    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, default=None, null=True, blank=True, related_name='purchase_hotel')
+    customer = ForeignKey(User, on_delete=CASCADE, related_name='purchase_customer', verbose_name='Zákazník')
+    arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
+    departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
+    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, default=None, null=True, blank=True,
+                           related_name='travel_packages', verbose_name='Strava')
+
+    number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
+                                          verbose_name='Počet jednolůžkových pokojů')
+    number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
+    number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
+    number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
+    total_price = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                               verbose_name='Cena celkem')
+    transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
+                                related_name='purchase_transportation', verbose_name='Doprava')
+    traveler = ManyToManyField(Traveler, related_name='travelers_purchases', verbose_name='Cestující')
     special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
 
     def __str__(self):

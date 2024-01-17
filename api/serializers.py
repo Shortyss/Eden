@@ -1,12 +1,6 @@
 from rest_framework import serializers
 
-from viewer.models import TravelPackage, Prices, Transportation, MealPlan
-
-
-class TravelPackageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TravelPackage
-        fields = '__all__'
+from viewer.models import Prices, Transportation, MealPlan
 
 
 class PricesSerializer(serializers.ModelSerializer):

@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!matchingPrice) {
             matchingPrice = prices[prices.length - 1];
         }
-
+        console.log('calculateTotalPriceForDay')
+        console.log(matchingPrice)
         return parseFloat(matchingPrice[roomType]);
     }
 
@@ -28,61 +29,45 @@ document.addEventListener('DOMContentLoaded', function () {
         var totalPrice = 0;
         var currentDate = new Date(startDate);
         var endDateObj = new Date(endDate);
-        endDateObj.setDate(endDateObj.getDate());
+        endDateObj.setDate(endDateObj.getDate() + 1);
 
         while (currentDate < endDateObj) {
-            totalPrice += calculateTotalPriceForDay(prices, pricesRoomTypes, currentDate);
+            totalPrice += calculateTotalPriceForDay(prices, pricesRoomTypes, currentDate); // * numberOfRooms;
             currentDate.setDate(currentDate.getDate() + 1);
         }
-
+        console.log('pricesRoomTypes')
+        console.log(pricesRoomTypes)
+        console.log('totalPrice')
+        console.log(totalPrice)
+        console.log('numberOfRooms')
+        console.log(numberOfRooms)
         return totalPrice;
     }
 
-    function calculateMealPlanPrice(mealPlan, adults, children, stayDuration) {
-        var mealPlanPrice = parseFloat(mealPlan.price);
-        return mealPlanPrice * (adults + children) * stayDuration;
-    }
-
-    function calculateTransportationPrice(transportation, adults, children) {
-        var transportationPrice = parseFloat(transportation.price);
-        return transportationPrice * (adults + children);
-    }
-
-    function calculateTotalTravelers(roomType) {
-        var adults = parseInt(document.getElementById('adults_' + roomType).value);
-        var children = parseInt(document.getElementById('children_' + roomType).value);
-        return adults + children;
-    }
-
     function updateTotalPrice() {
+        console.log('updateTotalPrice started');
         var roomTypes = ['single_rooms', 'double_rooms', 'family_rooms', 'suite_rooms'];
         var pricesRoomTypes = ['price_single_room', 'price_double_room', 'price_family_room', 'price_suite'];
 
         var selectedRoomType = null;
         var totalNumberOfRooms = 0;
+        var totalTotalPrice = 0;
 
         for (var i = 0; i < roomTypes.length; i++) {
             var numberOfRooms = parseInt(document.getElementById(roomTypes[i]).value);
             if (numberOfRooms > 0) {
                 selectedRoomType = roomTypes[i];
-                selectedPricesRoomType = pricesRoomTypes[i];
+                selectedPricesRoomType = pricesRoomTypes[i]
+                console.log('selectedRoomType')
                 totalNumberOfRooms += numberOfRooms;
 
                 if (!selectedRoomType || totalNumberOfRooms === 0) {
                     console.error('No room type selected or total number of rooms is zero.');
                     return;
                 }
-
                 var adults = parseInt(document.getElementById('adults_' + selectedRoomType).value);
                 var children = parseInt(document.getElementById('children_' + selectedRoomType).value);
                 var maxCapacity = getMaxCapacityForRoomType(selectedRoomType);
-
-                var totalTravelers = calculateTotalTravelers(selectedRoomType);
-
-                var travelerElement = document.getElementById('traveler');
-                if (travelerElement) {
-                    travelerElement.textContent = 'Celkem cestujících: ' + totalTravelers;
-                }
 
                 var errorMessageElement = document.getElementById('error_adults_' + selectedRoomType);
                 if (errorMessageElement) {
@@ -93,67 +78,32 @@ document.addEventListener('DOMContentLoaded', function () {
                         return;
                     }
                 }
-
                 var currentUrl = window.location.href;
                 var hotelId = currentUrl.split('/hotel/')[1].split('/')[0];
+                console.log('Vybraná místnost:', selectedPricesRoomType);
 
                 fetch('http://127.0.0.1:8000/api/prices_api/' + hotelId + '/')
                     .then(response => response.json())
                     .then(prices => {
+                        console.log('Prices API response:', prices);
                         var startDate = document.getElementById('arrival_date').value;
                         var endDate = document.getElementById('departure_date').value;
 
                         var totalPrice = calculateTotalPrice(prices, selectedRoomType, selectedPricesRoomType, numberOfRooms, startDate, endDate);
+                        var totalTotalPrice = totalPrice * totalNumberOfRooms;
 
-                        console.log('Room Type:', selectedRoomType);
-                        console.log('Prices:', prices);
-                        console.log('Total Price (Accommodation):', totalPrice);
-
-                        var mealPlanId = document.getElementById('meal_plan').value;
-                        fetch('http://127.0.0.1:8000/api/meal_plan_api/' + mealPlanId + '/')
-                            .then(response => response.json())
-                            .then(mealPlan => {
-                                var stayDuration = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
-                                var mealPlanPrice = calculateMealPlanPrice(mealPlan, adults, children, stayDuration);
-
-                                console.log('Meal Plan:', mealPlan);
-                                console.log('Meal Plan Price:', mealPlanPrice);
-
-                                var transportationId = document.getElementById('transportation').value;
-
-                                // Kontrola, zda je vybrána doprava
-                                var transportationPrice = 0;
-                                if (transportationId !== 'no_transport') {
-                                    fetch('http://127.0.0.1:8000/api/transportation_api/' + transportationId + '/')
-                                        .then(response => response.json())
-                                        .then(transportation => {
-                                            transportationPrice = parseFloat(transportation.price);
-                                            console.log('Transportation:', transportation);
-                                            console.log('Transportation Price:', transportationPrice);
-
-                                            var transportationPrice = calculateTransportationPrice(transportation, adults, children);
-                                            var totalTotalPriceWithTransportation = totalPrice * totalNumberOfRooms + mealPlanPrice + transportationPrice;
-
-                                            var totalPriceElement = document.getElementById('total_price');
-                                            if (totalPriceElement) {
-                                                totalPriceElement.textContent = 'Celková cena: ' + totalTotalPriceWithTransportation.toFixed(2) + ' Kč';
-                                            }
-                                        })
-                                        .catch(error => console.error('Error fetching Transportation API:', error));
-                                } else {
-                                    var totalTotalPriceWithoutTransportation = totalPrice * totalNumberOfRooms + mealPlanPrice;
-
-                                    var totalPriceElement = document.getElementById('total_price');
-                                    if (totalPriceElement) {
-                                        totalPriceElement.textContent = 'Celková cena: ' + totalTotalPriceWithoutTransportation.toFixed(2) + ' Kč';
-                                    }
-                                }
-                            })
-                            .catch(error => console.error('Error fetching Meal Plan API:', error));
+                        var totalPriceElement = document.getElementById('total_price');
+                        if (totalPriceElement) {
+                            totalPriceElement.textContent = 'Celková cena: ' + totalTotalPrice.toFixed(2) + ' Kč';
+                        }
                     })
                     .catch(error => console.error('Error fetching Prices API:', error));
-            }
-        }
+                    }
+                }
+
+
+
+
     }
 
     function getMaxCapacityForRoomType(roomType) {
@@ -186,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'double_rooms', 'adults_double_rooms', 'children_double_rooms',
         'family_rooms', 'adults_family_rooms', 'children_family_rooms',
         'suite_rooms', 'adults_suite_rooms', 'children_suite_rooms',
-        'meal_plan', 'transportation', 'arrival_date', 'departure_date'];
+        'meal_plan', 'transport', 'arrival_date', 'departure_date'];
 
     formFields.forEach(function (field) {
         document.getElementById(field).addEventListener('change', updateTotalPrice);

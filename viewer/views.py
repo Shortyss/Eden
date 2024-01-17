@@ -430,13 +430,9 @@ def hotel(request, pk):
 
     images = HotelImage.objects.filter(hotel=hotel_object)
 
-    travel_packages = TravelPackage.objects.filter(hotel=hotel_object)
-
     meal_plans = MealPlan.objects.all()
 
     prices = Prices.objects.filter(hotel=hotel_object)
-
-    current_travel_package = travel_packages.first()
 
     if request.method == 'POST':
         single_rooms = int(request.POST.get('single_rooms', 0))
@@ -451,15 +447,11 @@ def hotel(request, pk):
             'suite_rooms': suite_rooms,
         }
 
-        return redirect('create_purchase')
-
-    travel_package = TravelPackage
-    arrival_date = travel_package.arrival_date
-    departure_date = travel_package.departure_date
+        return redirect('purchase_create')
 
     context = {'hotel': hotel_object, 'avg_rating': avg_rating,
-               'user_rating': user_rating, 'comments': comments, 'images': images, 'travel_packages': travel_packages,
-               'meal_plans': meal_plans, 'arrival_date': arrival_date, 'departure_date': departure_date,
+               'user_rating': user_rating, 'comments': comments, 'images': images,
+               'meal_plans': meal_plans,
                'prices': prices}
     return render(request, 'hotel.html', context)
 
@@ -739,78 +731,78 @@ class MealDeleteView(LoginRequiredMixin, DeleteView):
 
 
 # Travel packages
-
-
-class TravelPackageForm(ModelForm):
-    class Meta:
-        model = TravelPackage
-        fields = '__all__'
-        widgets = {
-            'arrival_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2)),
-            'departure_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2))
-        }
-
-    def clean(self):
-        cleaned_data = super().clean()
-        arrival_date = cleaned_data.get('arrival_date')
-        departure_date = cleaned_data.get('departure_date')
-
-        if arrival_date and arrival_date < datetime.today().date():
-            self.add_error('arrival_date', 'Nelze vybrat datum příjezdu v minulosti.')
-
-        if departure_date and departure_date < datetime.today().date():
-            self.add_error('departure_date', 'Nelze vybrat datum odjezdu v minulosti.')
-
-        if arrival_date and departure_date and arrival_date >= departure_date:
-            self.add_error('departure_date', 'Datum odjezdu musí být po datu příjezdu.')
-
-        return cleaned_data
-
-
-def travel_package(request, pk):
-    travel_package_object = TravelPackage.objects.get(id=pk)
-    travel_packages = MealPlan.objects.filter(travel_package=travel_package_object)
-    context = {'travel_package': travel_package_object, 'travel_packages': travel_packages}
-    return render(request, 'travel_package.html', context)
-
-
-class TravelPackageView(View):
-    def get(self, request):
-        travel_package_list = TravelPackage.objects.all()
-        context = {'travel_packages': travel_package_list}
-        return render(request, 'travel_package_admin.html', context)
-
-
-class TravelPackageCreate(LoginRequiredMixin, CreateView):
-    template_name = 'travel_package_create.html'
-    model = TravelPackage
-    form_class = TravelPackageForm
-    success_url = reverse_lazy('administration')
-    permission_required = 'administration'
-
-    def post(self, request, *args, **kwargs):
-        print("POST method called")
-        return super().post(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        arrival_date = form.cleaned_data.get('arrival_date')
-        departure_date = form.cleaned_data.get('departure_date')
-        print(f"Arrival Date: {arrival_date}, Departure Date: {departure_date}")
-
-
-class TravelPackageUpdate(LoginRequiredMixin, UpdateView):
-    template_name = 'travel_package_create.html'
-    model = TravelPackage
-    form_class = TravelPackageForm
-    success_url = reverse_lazy('administration')
-    permission_required = 'administration'
-
-
-class TravelPackageDelete(LoginRequiredMixin, DeleteView):
-    template_name = 'travel_package_delete.html'
-    model = TravelPackage
-    success_url = reverse_lazy('administration')
-    permission_required = 'administration'
+#
+#
+# class TravelPackageForm(ModelForm):
+#     class Meta:
+#         model = TravelPackage
+#         fields = '__all__'
+#         widgets = {
+#             'arrival_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2)),
+#             'departure_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2))
+#         }
+#
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         arrival_date = cleaned_data.get('arrival_date')
+#         departure_date = cleaned_data.get('departure_date')
+#
+#         if arrival_date and arrival_date < datetime.today().date():
+#             self.add_error('arrival_date', 'Nelze vybrat datum příjezdu v minulosti.')
+#
+#         if departure_date and departure_date < datetime.today().date():
+#             self.add_error('departure_date', 'Nelze vybrat datum odjezdu v minulosti.')
+#
+#         if arrival_date and departure_date and arrival_date >= departure_date:
+#             self.add_error('departure_date', 'Datum odjezdu musí být po datu příjezdu.')
+#
+#         return cleaned_data
+#
+#
+# def travel_package(request, pk):
+#     travel_package_object = TravelPackage.objects.get(id=pk)
+#     travel_packages = MealPlan.objects.filter(travel_package=travel_package_object)
+#     context = {'travel_package': travel_package_object, 'travel_packages': travel_packages}
+#     return render(request, 'travel_package.html', context)
+#
+#
+# class TravelPackageView(View):
+#     def get(self, request):
+#         travel_package_list = TravelPackage.objects.all()
+#         context = {'travel_packages': travel_package_list}
+#         return render(request, 'travel_package_admin.html', context)
+#
+#
+# class TravelPackageCreate(LoginRequiredMixin, CreateView):
+#     template_name = 'travel_package_create.html'
+#     model = TravelPackage
+#     form_class = TravelPackageForm
+#     success_url = reverse_lazy('administration')
+#     permission_required = 'administration'
+#
+#     def post(self, request, *args, **kwargs):
+#         print("POST method called")
+#         return super().post(request, *args, **kwargs)
+#
+#     def form_valid(self, form):
+#         arrival_date = form.cleaned_data.get('arrival_date')
+#         departure_date = form.cleaned_data.get('departure_date')
+#         print(f"Arrival Date: {arrival_date}, Departure Date: {departure_date}")
+#
+#
+# class TravelPackageUpdate(LoginRequiredMixin, UpdateView):
+#     template_name = 'travel_package_create.html'
+#     model = TravelPackage
+#     form_class = TravelPackageForm
+#     success_url = reverse_lazy('administration')
+#     permission_required = 'administration'
+#
+#
+# class TravelPackageDelete(LoginRequiredMixin, DeleteView):
+#     template_name = 'travel_package_delete.html'
+#     model = TravelPackage
+#     success_url = reverse_lazy('administration')
+#     permission_required = 'administration'
 
 
 # Transportation
@@ -870,34 +862,84 @@ class TransportationDelete(LoginRequiredMixin, DeleteView):
     permission_required = 'administration'
 
 
+# Traveler
+
+
+class TravelerForm(ModelForm):
+    class Meta:
+        model = Traveler
+        fields = '__all__'
+
+
 # PURCHASE
 
 
 class PurchaseForm(ModelForm):
+
     class Meta:
         model = Purchase
         fields = '__all__'
 
 
-def create_purchase(request):
-    if request.method == 'POST':
+class PurchaseCreate(View):
+    template_name = 'purchase_create.html'
+
+    def post(self, request, *args, **kwargs):
+        # Získání dat z POST požadavku
+        hotel_id = request.POST.get('hotel')
+        arrival_date = request.POST.get('arrival_date')
+        departure_date = request.POST.get('departure_date')
+        meal_plan_id = request.POST.get('meal_plan')
+        transportation_id = request.POST.get('transportation')
+        adults = int(request.POST.get('adults', 0))
+        children = int(request.POST.get('children', 0))
+        total_price = request.POST.get('total_price')
+        purchase_form = PurchaseForm(request.POST)
+        travelers_formset = purchase_form.travelers(request.POST, prefix='travelers')
+
+        if purchase_form.is_valid() and travelers_formset.is_valid():
+            purchase = purchase_form.save(commit=False)
+            purchase.customer = request.user
+            purchase.save()
+
+        # Vytvoření instance formuláře s POST daty
         form = PurchaseForm(request.POST)
 
         if form.is_valid():
             purchase = form.save(commit=False)
             purchase.customer = request.user
+            purchase.hotel_id = hotel_id
+            purchase.arrival_date = arrival_date
+            purchase.departure_date = departure_date
+            purchase.meal_plan_id = meal_plan_id
+            purchase.transportation_id = transportation_id
+            purchase.total_price = total_price
             purchase.save()
 
-            request.session.pop('room_counts', None)
+            for _ in range(adults):
+                purchase.travelers.add(Traveler(age_category='adult'))
+            for _ in range(children):
+                purchase.travelers.add(Traveler(age_category='child'))
+
+            # Získání vytvořené rezervace
+            purchase = get_object_or_404(Purchase, pk=purchase.pk)
 
             return render(request, 'purchase_success.html', {'purchase': purchase})
+
+        # Kód pro případ, kdy formulář není validní
+        return render(request, 'purchase_create.html', {'form': form})
+
+
+def purchase_traveler_view(request, purchase_id):
+    purchase_instance = get_object_or_404(Purchase, id=purchase_id)
+    travelerFormSet = inlineformset_factory(Purchase, Traveler, fields=('first_name', 'last_name', 'birth_date'), extra=1)
+
+    if request.method == 'POST':
+        formset = travelerFormSet(request.POST, instance=purchase_instance)
+        if formset.is_valid():
+            formset.save()
+
     else:
-        form = PurchaseForm()
+        formset = travelerFormSet(instance=purchase_instance)
 
-        room_counts = request.session.get('room_counts', {})
-        form.fields['single_rooms'].initial = room_counts.get('single_rooms', 0)
-        form.fields['double_rooms'].initial = room_counts.get('double_rooms', 0)
-        form.fields['family_rooms'].initial = room_counts.get('family_rooms', 0)
-        form.fields['suite_rooms'].initial = room_counts.get('suite_rooms', 0)
-
-    return render(request, 'purchase_form.html', {'form': form})
+    return render(request, 'your_template.html', {'formset': formset, 'purchase_instance': purchase_instance})

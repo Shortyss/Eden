@@ -3,18 +3,9 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 
 from api.serializers import *
-from viewer.models import TravelPackage
 
 
 # Create your views here.
-
-class TravelPackages(mixins.ListModelMixin, generics.GenericAPIView):
-    queryset = TravelPackage.objects.all()
-    serializer_class = TravelPackageSerializer
-
-    def get(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
-
 
 class PricesAPI(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Prices.objects.all()

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method="post" action="{% url 'purchase_create' %}">
+  {% csrf_token %}
+
+  <!-- Pole pro hotel -->
+  <label for="hotel">Hotel:</label>
+  <input type="text" id="hotel" name="hotel" value="{{ hotel.id }}" readonly>
+
+  <!-- Pole pro zákazníka -->
+  <label for="customer">Zákazník:</label>
+  <input type="text" id="customer" name="customer" value="{{ request.user.username }}" readonly>
+
+  <!-- Pole pro datum příjezdu -->
+  <label for="arrival_date">Datum příjezdu:</label>
+  <input type="date" id="arrival_date" name="arrival_date" required>
+
+  <!-- Pole pro datum odjezdu -->
+  <label for="departure_date">Datum odjezdu:</label>
+  <input type="date" id="departure_date" name="departure_date" required>
+
+  <!-- Pole pro výběr stravy -->
+  <label for="meal_plan">Výběr stravy:</label>
+  <select id="meal_plan" name="meal_plan" required>
+    {% for meal_plan in meal_plans %}
+      <option value="{{ meal_plan.id }}">{{ meal_plan.name }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- Pole pro vybrané pokoje -->
+  <label for="selected_rooms">Vybrané pokoje:</label>
+  <select id="selected_rooms" name="selected_rooms" multiple>
+    <!-- Zde zobrazte vybrané pokoje podle potřeby -->
+    {% for room in selected_rooms %}
+      <option value="{{ room.id }}">{{ room.name }} - {{ room.type }}</option>
+    {% endfor %}
+  </select>
+
+  <!-- Pole pro počet pokojů -->
+  <label for="room_count">Počet pokojů:</label>
+  <input type="number" id="room_count" name="room_count" min="0" value="0">
+
+  <!-- Pole pro počet dospělých -->
+  <label for="adults_count">Počet dospělých:</label>
+  <input type="number" id="adults_count" name="adults_count" min="0" value="0">
+
+  <!-- Pole pro počet dětí -->
+  <label for="children_count">Počet dětí:</label>
+  <input type="number" id="children_count" name="children_count" min="0" value="0">
+
+  <!-- Pole pro výběr dopravy -->
+  <label for="transportation">Doprava:</label>
+  <select id="transportation" name="transportation" required>
+    <option value="no_transport">Bez dopravy</option>
+    <option value="{{ hotel.transportation.id }}" selected>Letecky</option>
+  </select>
+
+  <!-- Pole pro formuláře pro cestující -->
+  <!-- Zde zobrazte formuláře pro cestující na základě počtu osob celkem -->
+
+  <!-- Pole pro cenu celkem -->
+  <label for="total_price">Celková cena:</label>
+  <input type="text" id="total_price" name="total_price" value="0" readonly>
+
+  <!-- Pole pro zvláštní požadavky -->
+  <label for="special_requirements">Zvláštní požadavky:</label>
+  <textarea id="special_requirements" name="special_requirements" rows="4" cols="50"></textarea>
+
+  <button type="submit">Potvrdit rezervaci</button>
+</form>
+{% endblock %}
+
+
+
+  {% for form in additional_travelers_forms %}
+  {{ form.as_p }}
+  {% endfor %}

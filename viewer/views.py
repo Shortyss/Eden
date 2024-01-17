@@ -565,7 +565,6 @@ class HotelUpdateView(LoginRequiredMixin, UpdateView):
     permission_required = 'administration'
 
     def form_valid(self, form):
-        print('Jsme tu')
         self.object = form.save(commit=False)
         city = form.cleaned_data.get('city')
         country = city.country if city else None
@@ -573,14 +572,11 @@ class HotelUpdateView(LoginRequiredMixin, UpdateView):
         self.object.save()
 
         prices_formset = HotelPricesFormSet(self.request.POST, instance=self.object)
-        print('tady za cenou')
         # add_price(self.request)
         if prices_formset.is_valid():
             prices_formset.save()
-            print('uloženo')
             return super().form_valid(form)
         else:
-            print('neuloženo')
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -839,7 +835,7 @@ class TransportationForm(LoginRequiredMixin, CreatePopupMixin, ModelForm):
 
 def transportation(request, pk):
     transportation_object = Transportation.objects.get(id=pk)
-    transportations = Transportation.objects.filter(transportation_object=transportation_object)
+    transportations = Transportation.objects.filter(id=pk)
     context = {'transportation': transportation_object, 'transportations': transportations}
     return render(request, 'transportation.html', context)
 
@@ -860,7 +856,7 @@ class TransportationCreate(LoginRequiredMixin, CreateView):
 
 
 class TransportationUpdate(LoginRequiredMixin, UpdateView):
-    template_name = 'transportation_crete.html'
+    template_name = 'transportation_creete.html'
     model = Transportation
     form_class = TransportationForm
     success_url = reverse_lazy('administration')

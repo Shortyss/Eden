@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Detail Dopravy</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Odkud</th>
+        <th>Kam</th>
+        <th>Cena</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{ transportation.departure_airport }}</td>
+        <td>{{ transportation.arrival_airport }}</td>
+        <td>{{ transportation.price }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+{% endblock %}

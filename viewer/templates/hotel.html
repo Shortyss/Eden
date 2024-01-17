@@ -106,10 +106,10 @@
         </select>
 
 
-        <label>Doprava:</label>
-        <select id="transport" name="transport" required>
+        <label for="transportation">Doprava:</label>
+        <select id="transportation" name="transport" required>
             <option value="no_transport">Bez dopravy</option>
-            <option value="flight">Letecky</option>
+            <option value="{{ hotel.transportation.id }}" selected>Letecky</option>
         </select>
 
         <span id="total_price">Celková cena: {{ totalPrice }} Kč</span>

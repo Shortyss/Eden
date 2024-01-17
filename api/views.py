@@ -1,5 +1,5 @@
-from rest_framework import mixins, generics
-from django.shortcuts import render
+from rest_framework import mixins, generics, status
+from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
 
 from api.serializers import *
@@ -30,6 +30,7 @@ class PricesAPI(mixins.ListModelMixin, mixins.RetrieveModelMixin, generics.Gener
 class TransportationAPI(mixins.RetrieveModelMixin, generics.GenericAPIView):
     queryset = Transportation.objects.all()
     serializer_class = TransportationSerializer
+    lookup_field = 'pk'
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)

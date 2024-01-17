@@ -43,11 +43,6 @@ document.addEventListener('DOMContentLoaded', function () {
         return mealPlanPrice * (adults + children) * stayDuration;
     }
 
-    function calculateTransportationPrice(transportation, adults, children) {
-        var transportationPrice = parseFloat(transportation.price);
-        return transportationPrice * (adults + children);
-    }
-
     function updateTotalPrice() {
         var roomTypes = ['single_rooms', 'double_rooms', 'family_rooms', 'suite_rooms'];
         var pricesRoomTypes = ['price_single_room', 'price_double_room', 'price_family_room', 'price_suite'];
@@ -106,34 +101,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 console.log('Meal Plan:', mealPlan);
                                 console.log('Meal Plan Price:', mealPlanPrice);
 
-                                var transportationId = document.getElementById('transportation').value;
+                                var totalTotalPrice = totalPrice * totalNumberOfRooms + mealPlanPrice;
 
-                                // Kontrola, zda je vybrána doprava
-                                var transportationPrice = 0;
-                                if (transportationId !== 'no_transport') {
-                                    fetch('http://127.0.0.1:8000/api/transportation_api/' + transportationId + '/')
-                                        .then(response => response.json())
-                                        .then(transportation => {
-                                            transportationPrice = parseFloat(transportation.price);
-                                            console.log('Transportation:', transportation);
-                                            console.log('Transportation Price:', transportationPrice);
-
-                                            var transportationPrice = calculateTransportationPrice(transportation, adults, children);
-                                            var totalTotalPriceWithTransportation = totalPrice * totalNumberOfRooms + mealPlanPrice + transportationPrice;
-
-                                            var totalPriceElement = document.getElementById('total_price');
-                                            if (totalPriceElement) {
-                                                totalPriceElement.textContent = 'Celková cena: ' + totalTotalPriceWithTransportation.toFixed(2) + ' Kč';
-                                            }
-                                        })
-                                        .catch(error => console.error('Error fetching Transportation API:', error));
-                                } else {
-                                    var totalTotalPriceWithoutTransportation = totalPrice * totalNumberOfRooms + mealPlanPrice;
-
-                                    var totalPriceElement = document.getElementById('total_price');
-                                    if (totalPriceElement) {
-                                        totalPriceElement.textContent = 'Celková cena: ' + totalTotalPriceWithoutTransportation.toFixed(2) + ' Kč';
-                                    }
+                                var totalPriceElement = document.getElementById('total_price');
+                                if (totalPriceElement) {
+                                    totalPriceElement.textContent = 'Celková cena: ' + totalTotalPrice.toFixed(2) + ' Kč';
                                 }
                             })
                             .catch(error => console.error('Error fetching Meal Plan API:', error));
@@ -173,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
         'double_rooms', 'adults_double_rooms', 'children_double_rooms',
         'family_rooms', 'adults_family_rooms', 'children_family_rooms',
         'suite_rooms', 'adults_suite_rooms', 'children_suite_rooms',
-        'meal_plan', 'transportation', 'arrival_date', 'departure_date'];
+        'meal_plan', 'transport', 'arrival_date', 'departure_date'];
 
     formFields.forEach(function (field) {
         document.getElementById(field).addEventListener('change', updateTotalPrice);

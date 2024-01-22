@@ -1,14 +1,22 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
-  <h1>Země v Africe</h1>
+  <h1 class="title">Země v Africe</h1>
   {% if countries %}
-    <ul>
+    <ul class="country-list">
       {% for country in countries %}
-        <li><a href="{% url 'country' country.id %}">{{country}}</a></li>
+        <li>
+          <div class="country-item">
+            <img class="country-img" src="{% static 'images/' %}{{ country.name|lower }}.jpg" alt="{{ country.name }}" width="300" height="250">
+            <a href="{% url 'country' country.id %}" class="country-link">{{ country.name }}</a>
+          </div>
+        </li>
       {% endfor %}
     </ul>
   {% else %}
     <p>Žádné země v Africe nebyly nalezeny.</p>
   {% endif %}
 {% endblock %}
+ck %}

@@ -1,3 +1,5 @@
+from django.http import JsonResponse
+from django.views import View
 from rest_framework import mixins, generics, status
 from django.shortcuts import render, get_object_or_404
 from rest_framework.response import Response
@@ -33,3 +35,17 @@ class MealPlanAPI(mixins.RetrieveModelMixin, generics.GenericAPIView):
 
     def get(self, request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
+
+
+class SaveDataToSessionView(View):
+    def post(self, request, *args, **kwargs):
+        transportation = request.POST.get('transportation')
+        total_total_price = request.POST.get('totalTotalPrice')
+        total_travelers = request.POST.get('totalTravelers')
+
+        # Uložte hodnoty do session
+        request.session['transportation'] = transportation
+        request.session['total_total_price'] = total_total_price
+        request.session['total_travelers'] = total_travelers
+
+        return JsonResponse({'status': 'success'})

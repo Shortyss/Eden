@@ -1,11 +1,12 @@
 {% extends "base.html" %}
+
 {% load static %}
 
 {% block content %}
     <h1>Hotely</h1>
 
     <form method="get" action="">
-        {{ form.as_p }}
+        {{ form }}
         <div class="star-rating">
             {% for rating, label in form.star_rating.choices %}
                 <div class="star">
@@ -23,8 +24,6 @@
             </div>
         {% endfor %}
 
-        <label for="search_name">Hledat podle názvu (min. 3 písmena):</label>
-        <input type="text" name="search_name" id="search_name" value="{{ form.search_name.value }}" minlength="3">
 
         <label>Řazení podle ceny:</label>
         <select name="sort_by_price">
@@ -35,6 +34,9 @@
         <button type="submit">Filtrovat</button>
     </form>
 
+    <script src="{% url 'city-autocomplete' %}"></script>
+    <script src="{% url 'country-autocomplete' %}"></script>
+
     <ul>
         {% for hotel in hotels %}
             <li>
@@ -42,7 +44,4 @@
             </li>
         {% endfor %}
     </ul>
-
-    <script src="{% static 'stars.js' %}"></script>
-    <link rel="stylesheet" type="text/css" href="{% static 'stars.css' %}">
 {% endblock %}

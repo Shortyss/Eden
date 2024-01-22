@@ -1,9 +1,22 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
 <div class="index">
     <h2>Vítejte v Edenu, zde najde každý svůj ráj na zemi. <span id="date-time"></span></h2>
-
 </div>
+<div class="session_offer">
+    <h1 class="index-title">Naše sezoní nabídka zájezdů</h1>
+    <div class="session-box" id="destinationBox">
+        <div class="arrow left" onclick="showPreviousDestination()">&#9665;</div>
+        <div class="image-container">
+
+        </div>
+        <div class="arrow right" onclick="showNextDestination()">&#9655;</div>
+    </div>
+</div>
+
+<script src="{% static 'viewer/script.js' %}"></script>
 
 {% endblock %}

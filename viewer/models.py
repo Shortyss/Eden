@@ -80,7 +80,11 @@ class Hotel(Model):
     single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')
     double_rooms = IntegerField(default=0, verbose_name='Dvoulůžkové pokoje')
     family_rooms = IntegerField(default=0, verbose_name='Rodinné pokoje')
-    suites = IntegerField(default=0, verbose_name='Apartmány')
+    suite_rooms = IntegerField(default=0, verbose_name='Apartmány')
+    travelers = IntegerField(default=1, verbose_name='Celkem cestujících')
+    current_price = DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name='Aktuální cena')
+    total_price = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
+                               verbose_name='Cena celkem')
 
     star_rating = IntegerField(default=0, verbose_name='Počet hvězdiček', choices=[
         (1, '1 hvězdička'),
@@ -96,7 +100,7 @@ class Hotel(Model):
         return HotelImage.objects.filter(hotel=self)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - Cena bez stravy na týden již od: {self.current_price} Kč"
 
 
 class MealPlan(Model):
@@ -177,16 +181,16 @@ class Purchase(Model):
     meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, default=None, null=True, blank=True,
                            related_name='travel_packages', verbose_name='Strava')
 
-    number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
+    single_rooms = IntegerField(null=False, blank=False, default=0,
                                           verbose_name='Počet jednolůžkových pokojů')
-    number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
-    number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
-    number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
+    double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
+    family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
+    suite_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
     total_price = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
                                verbose_name='Cena celkem')
     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
                                 related_name='purchase_transportation', verbose_name='Doprava')
-    traveler = ManyToManyField(Traveler, related_name='travelers_purchases', verbose_name='Cestující')
+    travelers = IntegerField(default=1, verbose_name='Celkem cestujících')
     special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
 
     def __str__(self):

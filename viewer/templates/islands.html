@@ -1,14 +1,20 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
   <h1>Ostrovy:</h1>
   {% if islands %}
-    <ul>
+    <ul class="island-list">
       {% for island in islands %}
-        <li><a href="{% url 'island' island.id %}">{{ island }}</a></li>
+        <li class="island-item">
+          <img src="{% static 'images/' %}{{ island.name|lower }}.jpg" alt="{{ island.name }}" width="20" height="20">
+          <a href="{% url 'island' island.id %}">{{ island.name }}</a>
+        </li>
       {% endfor %}
     </ul>
   {% else %}
     <p>Žádné ostrovy nebyly nalezeny.</p>
   {% endif %}
 {% endblock %}
+

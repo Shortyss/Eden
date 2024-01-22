@@ -119,5 +119,6 @@ urlpatterns = [
     path('api/prices_api/<pk>/', api.views.PricesAPI.as_view()),
     path('api/transportation_api/<pk>/', api.views.TransportationAPI.as_view()),
     path('api/meal_plan_api/<pk>/', api.views.MealPlanAPI.as_view()),
+    path('save_data_to_session/', SaveDataToSessionView.as_view(), name='save_data_to_session'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

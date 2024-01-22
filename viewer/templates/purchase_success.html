@@ -1,13 +1,16 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
   <h1>Potvrzení rezervace</h1>
   <p>Děkujeme za vaši rezervaci!</p>
   <p>Detaily rezervace:</p>
   <p>Zákazník: {{ purchase.customer }}</p>
-  <p>Počet cestujících: {{ purchase.adults + purchase.children }}</p>
-  <p>Hotel: {{ purchase.hotel }}</p>
+  <p>Počet cestujících: {{ purchase.travelers }}</p>
+  <p>Hotel: {{ request.session.hotel_name }}</p>
   <p>Strava: {{ purchase.meal_plan }}</p>
+  <p>Doprava: {{ request.session.transportation_id }}</p>
   <p>Celková cena: {{ purchase.total_price }}</p>
 
 {% endblock %}

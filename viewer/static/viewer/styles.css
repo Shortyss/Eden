@@ -40,7 +40,7 @@ body, html {
     justify-content: flex-end;
     padding: 0px 30px;
     align-items: center;
-    border: hide;
+    border: none;
 }
 
 .navContainer2 {
@@ -93,13 +93,13 @@ footer {
 }
 
 .index {
-    margin: 0px, 70px, 20px, 70px;
+    margin: 0 70px 20px 70px;
     width: 100vw;
     display: flex;
+    text-align: center;
     justify-content: center;
 }
 
-/* stars.css */
 .star-rating {
   font-size: 24px;
 }
@@ -121,9 +121,125 @@ footer {
 }
 
 .star label:before {
-  content: '\2605'; /* Unicode character for a solid star */
+  content: '\2605';
 }
 
 .star input:checked ~ label {
-  color: #fdd835; /* Yellow color for checked star */
+  color: #fdd835;
+}
+
+
+.country-list {
+  list-style: none;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.country-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-direction: column;
+  text-align: center;
+}
+
+.country-img {
+  border: 1px solid #ddd;
+  padding: 5px;
+}
+
+.country-link {
+  text-decoration: none;
+  color: #333;
+  margin-top: 5px;
+  font-weight: bold;
+  font-size: 1.4em;
+}
+
+.country-link:hover {
+  text-decoration: underline;
+}
+
+.title {
+  text-align: center;
+  text-size: 2.1em;
+  margin-top: 50px;
+  font-weight: bold;
+}
+
+
+.hotel-filter {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.filter-section {
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.star-rating {
+    display: flex;
+    align-items: center;
+}
+
+.star {
+    margin-right: 10px;
+}
+
+.hotel-list {
+    list-style: none;
+    padding: 0;
+}
+
+.hotel-list li {
+    margin-bottom: 10px;
+}
+
+.session_offer {
+    width: 70vw;
+    margin: 0 auto; /* Centrování boxu */
+}
+
+.index-title {
+    text-align: center;
+}
+
+.session-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.arrow {
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.image-container {
+    width: 70%; /* 70% šířky boxu */
+    position: relative;
+}
+
+.destination-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.destination-name {
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.highlighted-arrow {
+    color: black;
 }

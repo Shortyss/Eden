@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from logging import getLogger
 
@@ -5,6 +6,8 @@ from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.forms.widgets import ChoiceWidget
+from django.http import HttpResponse
 from django.views.generic import ListView
 from django_addanother.views import CreatePopupMixin
 from django_addanother.widgets import AddAnotherWidgetWrapper
@@ -14,7 +17,7 @@ from django.core.files.base import ContentFile
 from django.db.models import Avg, Q
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
     CharField, Textarea, ClearableFileInput, FileField, HiddenInput, FileInput, SelectDateWidget, forms, \
-    CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple, DateInput
+    CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple, DateInput, TextInput, ModelChoiceField
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils.text import slugify
 from django.urls import reverse_lazy
@@ -338,6 +341,12 @@ class CityDeleteView(LoginRequiredMixin, DeleteView):
     permission_request = 'administration'
 
 
+class CityAutocomplete(autocomplete.Select2QuerySetView):
+    def get_queryset(self):
+        qs = City.objects.all()
+        if self.q:
+            qs = qs.filter(name__icontains=self.q)
+        return qs
 # Price
 
 
@@ -384,7 +393,11 @@ class HotelModelForm(ModelForm):
                     forward=['city'],
                 ),
                 reverse_lazy('city_create')
-            )}
+            ),
+            'country': autocomplete.ModelSelect2(
+                url='country-autocomplete'
+            )
+        }
     prices = HotelPricesFormSet()
 
     country = CharField(widget=HiddenInput(), required=False)
@@ -413,6 +426,7 @@ class HotelModelForm(ModelForm):
 def hotel(request, pk):
     try:
         hotel_object = Hotel.objects.get(id=pk)
+        request.session['hotel_name'] = hotel_object.name
     except:
         return render(request, 'index.html')
 
@@ -432,7 +446,34 @@ def hotel(request, pk):
 
     meal_plans = MealPlan.objects.all()
 
-    prices = Prices.objects.filter(hotel=hotel_object)
+    current_date = datetime.now().date()
+    week_later_date = current_date + timedelta(days=7)
+
+    double_room_prices = Prices.objects.filter(
+        hotel=hotel_object,
+        price_double_room__isnull=False,
+        arrival_date__lte=current_date,
+        departure_date__gte=week_later_date
+    ).order_by('-arrival_date').first()
+
+    if double_room_prices:
+        # Vypočítá celkovou cenu za týdenní pobyt
+        nights_in_week = (week_later_date - current_date).days
+        total_price_for_week = double_room_prices.price_double_room * nights_in_week
+
+        hotel_object.current_price = total_price_for_week
+        hotel_object.save()
+
+    prices = list(Prices.objects.filter(hotel=hotel_object).values())
+    for price in prices:
+        date_columns = ['arrival_date', 'departure_date']
+        for column in date_columns:
+            if column in price and price[column] is not None:
+                price[column] = price[column].strftime('%Y-%m-%d')
+
+        for key, value in price.items():
+            if isinstance(value, Decimal):
+                price[key] = float(value)
 
     if request.method == 'POST':
         single_rooms = int(request.POST.get('single_rooms', 0))
@@ -452,7 +493,9 @@ def hotel(request, pk):
     context = {'hotel': hotel_object, 'avg_rating': avg_rating,
                'user_rating': user_rating, 'comments': comments, 'images': images,
                'meal_plans': meal_plans,
-               'prices': prices}
+               'double_room_prices': double_room_prices,
+               'prices': json.dumps(prices),
+               }
     return render(request, 'hotel.html', context)
 
 
@@ -504,9 +547,9 @@ class HotelsView(View):
         # Řazení podle ceny
         sort_by_price = request.GET.get('sort_by_price', None)
         if sort_by_price == 'asc':
-            queryset = queryset.order_by('price')
+            queryset = queryset.order_by('current_price')
         elif sort_by_price == 'desc':
-            queryset = queryset.order_by('-price')
+            queryset = queryset.order_by('-current_price')
 
         hotels = queryset
 
@@ -592,13 +635,31 @@ class HotelDeleteView(LoginRequiredMixin, DeleteView):
     permission_required = 'administration'
 
 
+def country_autocomplete(request):
+    countries = Country.objects.all()
+    json_data = {"countries": countries}
+    return HttpResponse(json.dumps(json_data), content_type="application/javascript")
+
+
 class HotelFilterForm(Form):
     continent = ModelMultipleChoiceField(queryset=Continent.objects.all(), required=False, label='Podle kontinentu',
                                          widget=CheckboxSelectMultiple)
-    countries = ModelMultipleChoiceField(queryset=Country.objects.all(), required=False, label='Podle země',
-                                         widget=CheckboxSelectMultiple)
-    cities = ModelMultipleChoiceField(queryset=City.objects.all(), required=False, label='Podle města',
-                                      widget=CheckboxSelectMultiple)
+
+    country = ModelChoiceField(
+        queryset=Country.objects.all(),
+        required=False,
+        widget=autocomplete.ModelSelect2(url='country-autocomplete')
+    )
+
+    cities = ModelMultipleChoiceField(
+        queryset=City.objects.all(),
+        required=False,
+        label='Podle města',
+        widget=autocomplete.ModelSelect2Multiple(
+            url='city-autocomplete',
+            attrs={'data-placeholder': 'Začněte psát název města...'}
+        )
+    )
     STAR_RATINGS = [
         ('1', '⭐'),
         ('2', '⭐⭐'),
@@ -826,10 +887,17 @@ class TransportationForm(LoginRequiredMixin, CreatePopupMixin, ModelForm):
 
 
 def transportation(request, pk):
-    transportation_object = Transportation.objects.get(id=pk)
-    transportations = Transportation.objects.filter(id=pk)
-    context = {'transportation': transportation_object, 'transportations': transportations}
-    return render(request, 'transportation.html', context)
+    try:
+        transportation_object = Transportation.objects.get(id=pk)
+        transportations = Transportation.objects.filter(id=pk)
+
+        request.session['transportation_id'] = transportation_object.id
+
+        context = {'transportation': transportation_object, 'transportations': transportations}
+        return render(request, 'transportation.html', context)
+    except Transportation.DoesNotExist:
+
+        return HttpResponse("Doprava nebyla nalezena.", status=404)
 
 
 class TransportationView(View):
@@ -878,68 +946,65 @@ class PurchaseForm(ModelForm):
 
     class Meta:
         model = Purchase
-        fields = '__all__'
+        fields = ['arrival_date', 'departure_date', 'meal_plan', 'single_rooms', 'double_rooms', 'family_rooms',
+                  'suite_rooms', 'total_price', 'transportation', 'travelers', 'special_requirements']
+        # readonly_fields = ['hotel_id', 'meal_plan']
+        hotel = CharField(
+            widget=TextInput(attrs={'readonly': 'readonly'})
+        )
+        widgets = {
+            'hotel': TextInput(attrs={'readonly': 'readonly'})
+        }
+
+    # def __init__(self, *args, **kwargs):
+    #     super(PurchaseForm, self).__init__(*args, **kwargs)
+    #     self.fields['hotel'].disabled = True
 
 
 class PurchaseCreate(View):
     template_name = 'purchase_create.html'
 
     def post(self, request, *args, **kwargs):
-        # Získání dat z POST požadavku
-        hotel_id = request.POST.get('hotel')
-        arrival_date = request.POST.get('arrival_date')
-        departure_date = request.POST.get('departure_date')
-        meal_plan_id = request.POST.get('meal_plan')
-        transportation_id = request.POST.get('transportation')
-        adults = int(request.POST.get('adults', 0))
-        children = int(request.POST.get('children', 0))
-        total_price = request.POST.get('total_price')
         purchase_form = PurchaseForm(request.POST)
-        travelers_formset = purchase_form.travelers(request.POST, prefix='travelers')
+        travelers_forms = []
 
-        if purchase_form.is_valid() and travelers_formset.is_valid():
+        if purchase_form.is_valid():
+            print('ahoj')
             purchase = purchase_form.save(commit=False)
             purchase.customer = request.user
+            purchase.hotel_id = request.POST.get('hotel')
+            purchase.arrival_date = request.POST.get('arrival_date')
+            purchase.departure_date = request.POST.get('departure_date')
+            purchase.meal_plan_id = request.POST.get('meal_plan')
+            purchase.number_of_single_rooms = request.POST.get('single_rooms')
+            purchase.number_of_double_rooms = request.POST.get('double_rooms')
+            purchase.number_of_family_rooms = request.POST.get('family_rooms')
+            purchase.number_of_suites = request.POST.get('suite_rooms')
+            purchase.transportation = request.POST.get('transportation')
+            purchase.travelers = request.POST.get('travelers')
+            purchase.total_price = request.POST.get('total_price')
             purchase.save()
-
-        # Vytvoření instance formuláře s POST daty
-        form = PurchaseForm(request.POST)
-
-        if form.is_valid():
-            purchase = form.save(commit=False)
-            purchase.customer = request.user
-            purchase.hotel_id = hotel_id
-            purchase.arrival_date = arrival_date
-            purchase.departure_date = departure_date
-            purchase.meal_plan_id = meal_plan_id
-            purchase.transportation_id = transportation_id
-            purchase.total_price = total_price
-            purchase.save()
-
-            for _ in range(adults):
-                purchase.travelers.add(Traveler(age_category='adult'))
-            for _ in range(children):
-                purchase.travelers.add(Traveler(age_category='child'))
 
             # Získání vytvořené rezervace
             purchase = get_object_or_404(Purchase, pk=purchase.pk)
 
-            return render(request, 'purchase_success.html', {'purchase': purchase})
+            # Přidání formulářů cestujících na základě počtu
+            num_travelers = int(request.POST.get('number_of_travelers', 0))
+            for i in range(num_travelers):
+                traveler_form = TravelerForm(request.POST, prefix=f'number_of_travelers_{i}')
+                if traveler_form.is_valid():
+                    traveler = traveler_form.save(commit=False)
+                    traveler.purchase = purchase
+                    traveler.save()
+                    travelers_forms.append(traveler_form)
+                else:
+                    print(traveler_form.errors)
+                    travelers_forms.append(TravelerForm(prefix=f'number_of_travelers_{i}'))
 
-        # Kód pro případ, kdy formulář není validní
-        return render(request, 'purchase_create.html', {'form': form})
+            travelers = int(request.POST.get('travelers', 0))
 
-
-def purchase_traveler_view(request, purchase_id):
-    purchase_instance = get_object_or_404(Purchase, id=purchase_id)
-    travelerFormSet = inlineformset_factory(Purchase, Traveler, fields=('first_name', 'last_name', 'birth_date'), extra=1)
-
-    if request.method == 'POST':
-        formset = travelerFormSet(request.POST, instance=purchase_instance)
-        if formset.is_valid():
-            formset.save()
-
-    else:
-        formset = travelerFormSet(instance=purchase_instance)
-
-    return render(request, 'your_template.html', {'formset': formset, 'purchase_instance': purchase_instance})
+            return render(request, 'purchase_success.html', {'purchase': purchase,
+                                                             'traveler_forms': travelers_forms, 'travelers': travelers})
+        print(purchase_form.errors)
+        return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+                                                        'traveler_forms': travelers_forms})

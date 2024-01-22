@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block content %}
-<h1>{{hotel.name}} </h1>
+<h1>{{ hotel.name }} </h1>
 <div class="hotel-details">
     <div id="hotel-data" data-hotel-id="{{ hotel.id }}"></div>
     <div class="hotel-avg-rating">Průměrné hodnocení:
@@ -30,6 +30,8 @@
     <h2>Vyberte svůj pobyt:</h2>
     <form method="post" action="{% url 'purchase_create' %}">
         {% csrf_token %}
+
+        <p>Aktuální cena: {{ hotel.current_price }}</p>
 
         <label>Datum příjezdu:</label>
         <input type="date" id="arrival_date" name="arrival_date" required>
@@ -112,11 +114,19 @@
             <option value="{{ hotel.transportation.id }}" selected>Letecky</option>
         </select>
 
-        <span id="traveler">Celkem cestujících: {{ totalTravelers }}</span>
-        <span id="total_price">Celková cena: {{ totalPrice }} Kč</span>
+        <script>
+            var prices = JSON.parse(`{{ prices|safe }}`);
+            console.log('Ceny:', prices);
+        </script>
 
-        <input type="hidden" id="hotel_id" name="hotel" value="{{ hotel.id }}">
-        <input type="hidden" id="user_id" name="user" value="{{ request.user.id }}">
+        {{ prices|json_script:"prices" }}
+
+        <span id="travelers">Celkem cestujících: {{ travelers }}</span>
+        <span id="total_price" >Celková cena: {{ totalPrice }} Kč</span>
+
+<!--        <input id="transportation" name="transportation" value="{{ hotel.transportation }}">-->
+
+
 
         <button id="reservation_button" type="submit">Rezervovat</button>
 

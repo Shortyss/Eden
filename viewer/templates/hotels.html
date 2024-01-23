@@ -3,45 +3,59 @@
 {% load static %}
 
 {% block content %}
-    <h1>Hotely</h1>
-
-    <form method="get" action="">
-        {{ form }}
-        <div class="star-rating">
-            {% for rating, label in form.star_rating.choices %}
-                <div class="star">
-                    <input type="checkbox" name="star_rating" value="{{ rating }}" id="star{{ rating }}">{% if rating in form.star_rating.data %}checked{% endif %}
-                    <label for="star{{ rating }}">{{ label }} a více</label>
+    <div class="hotels-container">
+        <div class="filters">
+            <form method="get" enctype="multipart/form-data" action="">
+                <div class="filter-section">
+                    {{ form.as_p }}
+                    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+                    {{ form.media }}
                 </div>
-            {% endfor %}
+                <div>
+                    <div class="star-rating">
+                        {% for rating, label in form.star_rating.choices %}
+                            <div class="star">
+                                <input type="checkbox" name="star_rating" value="{{ rating }}" id="star{{ rating }}">{% if rating in form.star_rating.data %}checked{% endif %}
+                                <label for="star{{ rating }}">{{ label }} a více</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="customer-rating">
+                        <label></label>
+                        {% for rating, label in form.customer_rating.choices %}
+                            <div class="rating-option">
+                                <input type="checkbox" name="customer_rating" value="{{ rating }}" id="rating{{ rating }}">{% if rating in form.customer_rating.data %}checked{% endif %}
+                                <label for="rating{{ rating }}">{{ label }} a více</label>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="price-section">
+                    <label>Řazení podle ceny:</label>
+                    <select name="sort_by_price">
+                        <option value="">--</option>
+                        <option value="asc">Od nejlevnějšího</option>
+                        <option value="desc">Od nejdražšího</option>
+                    </select>
+                    <button type="submit">Filtrovat</button>
+                </div>
+            </form>
         </div>
-
-        <label>Hodnocení zákazníků:</label>
-        {% for rating, label in form.customer_rating.choices %}
-            <div class="rating-option">
-                <input type="checkbox" name="customer_rating" value="{{ rating }}" id="rating{{ rating }}">{% if rating in form.customer_rating.data %}checked{% endif %}
-                <label for="rating{{ rating }}">{{ label }} a více</label>
+        <div class="hotels">
+            <h1>Hotely</h1>
+            <div class="hotel-list">
+                {% for hotel in hotels %}
+                    <div class="hotel-item">
+                        <a href="{% url 'hotel' hotel.id %}">{{ hotel.name }} již od: {{ hotel.current_price }} Kč</a>
+                        {% if hotel.get_images %}
+                            <div class="image-container">
+                                <img src="{{ hotel.get_images.0.image.url }}" alt="{{ hotel.get_images.0.description }}" width="250px">
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
-
-
-        <label>Řazení podle ceny:</label>
-        <select name="sort_by_price">
-            <option value="">--</option>
-            <option value="asc">Od nejlevnějšího</option>
-            <option value="desc">Od nejdražšího</option>
-        </select>
-        <button type="submit">Filtrovat</button>
-    </form>
-
-    <script src="{% url 'city-autocomplete' %}"></script>
-    <script src="{% url 'country-autocomplete' %}"></script>
-
-    <ul>
-        {% for hotel in hotels %}
-            <li>
-                <a href="{% url 'hotel' hotel.id %}">{{ hotel }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+        </div>
+    </div>
 {% endblock %}

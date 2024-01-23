@@ -34,11 +34,12 @@
         <a href="{% url 'asia' pk=3 %}"><button id="Asia">Asie</button> </a>
         <a href="{% url 'africa' pk=4 %}"><button id="Africa">Afrika</button> </a>
         <a href="{% url 'america' pk=2 %}"><button id="America">Amerika</button> </a>
-        <a href="{% url 'islands' %}"><button id="Island">Ostrovy</button></a>
         <a href="{% url 'hotels' %}"><button id="Hotels">Hotely</button> </a>
         <a href=""><button id="First minute">First minute</button> </a>
         <a href=""><button id="Last minute">Last minute</button> </a>
-        <a href="{% url 'administration' %}"><button id="Administration">Administrace</button> </a>
+        {% if user.is_authenticated and user.is_staff %}
+            <a href="{% url 'administration' %}"><button id="Administration">Administrace</button></a>
+        {% endif %}
     </nav>
     {% endif %}
     <main class="article">

@@ -53,6 +53,7 @@ body, html {
     border: hide;
 }
 
+.button,
 button {
     background:  #009999;
     color: #ffff33;
@@ -63,7 +64,7 @@ button {
     cursor: pointer;
     transition: linear .3s;
 }
-
+.button:hover,
 button:hover {
     transform: scale(1.2);
     border: 1.5px solid black;
@@ -242,4 +243,285 @@ footer {
 
 .highlighted-arrow {
     color: black;
+}
+
+
+.hotels-container{
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+.filters {
+    flex: 0 0 20vw;
+    background: linear-gradient(to right, #aaf0e0, white);
+    padding: 10px;
+}
+
+.filter-section,
+.star-rating,
+.customer-rating,
+.price-section {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.hotels {
+    flex: 1;
+    padding: 10px;
+}
+
+.hotel-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.hotel-item {
+    flex: 0 0 calc(25% - 10px);
+    margin-right: 10px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.image-container {
+    margin-top: 10px;
+}
+
+
+.hotel-details {
+    margin: 3%;
+    font-size: 18px;
+}
+
+.star {
+    color: #ffcc00;
+}
+
+#star-rating,
+#hotel-data,
+#name{
+    font-weight: bold;
+    font-size: 18px;
+    color:black;
+}
+
+.hotel-avg-rating {
+    font-weight: bold;
+    font-size: 20px;
+    color:black;
+}
+
+.hotel-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.image-hotel-container {
+    flex: 0 0 calc(33.33% - 10px);
+    max-width: calc(33.33% - 10px);
+}
+
+.image-hotel-container img {
+    width: 100%;
+    height: auto;
+}
+
+.accommodation-options {
+    display: grid;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 20px;
+    width: 100%;
+    font-size: 18px;
+}
+
+.accommodation-options > div {
+    flex: 3 30%;
+    margin-bottom: 20px;
+}
+
+.accommodation-options form {
+    width: 100%;
+}
+
+.accommodation-options select,
+.accommodation-options input {
+    width: 20%;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+}
+
+.hotel-page form {
+    flex: 0 0 calc(100% - 10px);
+    max-width: calc(100% - 10px);
+    margin-top: 20px;
+}
+
+.accommodation-options label {
+    display: row;
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.hotel-page input,
+.hotel-page select,
+.hotel-page textarea {
+    width: 300px;
+    padding: 8px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#travelers,
+#total_price {
+    font-weight: bold;
+    font-size: 20px;
+}
+
+#reservation_button {
+    height: 40px;
+    width: 120px;
+    font-size: 19px;
+}
+
+
+#error_adults_single_rooms,
+#error_children_single_rooms,
+#error_adults_double_rooms,
+#error_children_double_rooms,
+#error_adults_family_rooms,
+#error_children_family_rooms,
+#error_adults_suite_rooms,
+#error_children_suite_rooms {
+    color: red;
+    font-size: 14px;
+}
+
+#person_error_message {
+    color: red;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+#comment_form {
+    margin-top: 20px;
+}
+
+.customer {
+  margin-top: 10px;
+  font-weight: bold;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  background-color: #fff;
+  max-width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.reservation-form {
+  margin-top: 20px;
+  background-color: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  max-width: 70%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.travelers label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.traveler-form {
+  margin-bottom: 15px;
+}
+
+.button-container {
+  max-width: 80%;
+  margin: 0 auto;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.button-container a {
+  text-decoration: none;
+  flex: 1 0 30%;
+  margin-right: 10px;
+}
+
+.button-container button {
+  display: block;
+  margin-bottom: 10px;
+  padding: 10px 20px;
+  border: 2px solid black;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+}
+
+.edit-container {
+  display: flex;
+  justify-content: space-between;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.left-section {
+  width: 60%;
+}
+
+.right-section {
+  width: 35%;
+}
+
+.login-form {
+  width: 40%;
+  min-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-top: 50px;
+}
+
+.create-container{
+  width: 40%;
+  min-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  margin-top: 50px;
+}
+
+.signet_as {
+    font-weight: bold;
+    padding: 10px;
+    font-size: 18px;
 }

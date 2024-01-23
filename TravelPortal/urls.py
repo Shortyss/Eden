@@ -109,6 +109,7 @@ urlpatterns = [
     path('transportation/delete/<pk>/', TransportationDelete.as_view(), name='transportation_delete'),
 
     path('purchase_create/', PurchaseCreate.as_view(), name='purchase_create'),
+    # path('purchase_create/', purchase_create, name='purchase_create'),
 
     path('airport-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport-autocomplete'),
     path('country-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country-autocomplete'),

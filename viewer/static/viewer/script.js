@@ -265,6 +265,8 @@ document.addEventListener('DOMContentLoaded', function () {
         totalTotalPriceElement.addEventListener('change', totalTotalPrice);
     }
 
+    var travelersValue = document.getElementById('travelers').textContent.trim();
+    var totalPriceValue = document.getElementById('total_price').textContent.trim();
 
     updateTotalPrice();
 });
@@ -366,3 +368,47 @@ if (window.location.pathname.endsWith("/")) {
     updateDestination();
 }
 
+
+
+function copyToInput() {
+    console.log('copyToInput called');
+    var spanValue = document.getElementById('total_price').textContent;
+
+    // Použití regulárního výrazu pro extrakci čísla
+    var numberMatch = spanValue.match(/\d+/);
+
+    // Získání prvního nalezeného čísla
+    var numberValue = numberMatch ? parseInt(numberMatch[0]) : 0;
+
+    var inputElement = document.getElementById('total_price_v');
+    inputElement.value = numberValue;
+}
+
+function copyTravelersToInput() {
+    console.log('copyTravelersToInput called');
+    var travelersValue = document.getElementById('travelers').textContent;
+
+    // Použití regulárního výrazu pro extrakci čísla
+    var numberMatch = travelersValue.match(/\d+/);
+
+    // Získání prvního nalezeného čísla
+    var numberValue = numberMatch ? parseInt(numberMatch[0]) : 0;
+
+    var inputElement = document.getElementById('travelers_input');
+    inputElement.value = numberValue;
+}
+
+var spanElementTravelers = document.getElementById('travelers');
+spanElementTravelers.addEventListener('DOMSubtreeModified', function() {
+    copyTravelersToInput();
+});
+
+var spanElementTravelers = document.getElementById('travelers');
+spanElementTravelers.addEventListener('DOMSubtreeModified', function() {
+    copyTravelersToInput();
+});
+
+function handleReservationClick() {
+    copyToInput();
+    copyTravelersToInput();
+}

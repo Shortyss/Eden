@@ -74,7 +74,7 @@ class Hotel(Model):
     name = CharField(max_length=132, null=False, blank=False, verbose_name='Název')
     city = ForeignKey(City, on_delete=DO_NOTHING, related_name='hotels_of_cities', verbose_name='Město')
     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
-                                related_name='transportation_of_hotel', verbose_name='Doprava')
+                                to_field='id', related_name='transportation_of_hotel', verbose_name='Doprava')
     country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country',
                          verbose_name='Stát')
     single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')

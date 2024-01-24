@@ -1,14 +1,26 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
-  <h1>Hotely ve městě: {{ city }}</h1>
-  {% if hotels %}
-    <ul>
-      {% for hotel in hotels %}
-        <li><a href="{% url 'hotel' hotel.id %}">{{hotel}}</a></li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>Žádné hotely ve městě nebyly nalezeny.</p>
+<h1 class="title">Hotely ve městě: {{ city }}</h1>
+  <div class="hotels-city">
+    {% if hotels %}
+      <div class="hotel-list">
+          {% for hotel in hotels %}
+            <div class="hotel-item">
+              <a href="{% url 'hotel' hotel.id %}">{{ hotel.name }} již od: {{ hotel.current_price }} Kč</a>
+              {% if hotel.get_images %}
+                <div class="image-container">
+                  <img src="{{ hotel.get_images.0.image.url }}" alt="{{ hotel.get_images.0.description }}" width="250px">
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p>Žádné hotely ve městě nebyly nalezeny.</p>
+      </div>
   {% endif %}
+  </div>
 {% endblock %}

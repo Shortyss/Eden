@@ -59,7 +59,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
-
+    'TravelPortal.middleware.AdminPagesMiddleware',
 ]
 
 ROOT_URLCONF = 'TravelPortal.urls'

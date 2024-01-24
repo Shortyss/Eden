@@ -129,7 +129,7 @@ footer {
   color: #fdd835;
 }
 
-
+.city-list,
 .country-list {
   list-style: none;
   padding: 0;
@@ -138,6 +138,7 @@ footer {
   justify-content: center;
 }
 
+.city-item,
 .country-item {
   display: flex;
   align-items: center;
@@ -146,11 +147,13 @@ footer {
   text-align: center;
 }
 
+.city-img,
 .country-img {
   border: 1px solid #ddd;
   padding: 5px;
 }
 
+.city-link,
 .country-link {
   text-decoration: none;
   color: #333;
@@ -159,6 +162,7 @@ footer {
   font-size: 1.4em;
 }
 
+.city-link:hover,
 .country-link:hover {
   text-decoration: underline;
 }
@@ -204,7 +208,7 @@ footer {
 
 .session_offer {
     width: 70vw;
-    margin: 0 auto; /* Centrování boxu */
+    margin: 0 auto;
 }
 
 .index-title {
@@ -224,7 +228,7 @@ footer {
 }
 
 .image-container {
-    width: 70%; /* 70% šířky boxu */
+    width: 70%;
     position: relative;
 }
 
@@ -264,6 +268,13 @@ footer {
 .price-section {
     width: 100%;
     margin-bottom: 10px;
+}
+
+.hotels-city {
+    flex: 1;
+    margin-left: 50px;
+    margin-right: 50px;
+    padding: 20px;
 }
 
 .hotels {
@@ -480,6 +491,7 @@ footer {
   width: 100%;
 }
 
+.profile-container,
 .edit-container {
   display: flex;
   justify-content: space-between;
@@ -525,3 +537,4 @@ footer {
     padding: 10px;
     font-size: 18px;
 }
+

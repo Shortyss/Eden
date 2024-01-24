@@ -36,6 +36,12 @@ def administration(request):
     return render(request, 'administration.html', )
 
 
+def first_minute(request):
+    return render(request, 'first_minute.html', )
+
+
+def last_minute(request):
+    return render(request, 'last_minute.html', )
 # RATING
 
 

@@ -304,7 +304,27 @@ if (window.location.pathname.endsWith("/")) {
             image: "static/offer/Aruba.jpg",
             link: "http://127.0.0.1:8000/country/52/",
             name: "Aruba"
-        }
+        },
+        {
+            image: "static/offer/Česká Republika.jpg",
+            link: "http://127.0.0.1:8000/country/3/",
+            name: "Česká Republika"
+        },
+        {
+            image: "static/offer/Egypt.jpg",
+            link: "http://127.0.0.1:8000/country/27/",
+            name: "Egypt"
+        },
+        {
+            image: "static/offer/Filipíny.jpg",
+            link: "http://127.0.0.1:8000/country/43/",
+            name: "Filipíny"
+        },
+        {
+            image: "static/offer/Florida.jpg",
+            link: "http://127.0.0.1:8000/country/48/",
+            name: "Florida"
+        },
     ];
 
     var currentDestination = 0;

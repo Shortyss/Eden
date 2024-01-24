@@ -1,10 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% load static %}
+
+{% block content %}
+<h1 class="title">Nabídka first minute zájezdů: </h1>
+<h3 class="title">Zájezdy po Evrpě:</h3>
+<div class="First-minute-europe-offer">
+    <div class="f-m-box" >
+
+    </div>
+</div>
+
+<h3 class="title">Zájezdy po Asii:</h3>
+<div class="First-minute-asia-offer">
+    <div class="f-m-box" >
+
+    </div>
+</div>
+
+<h3 class="title">Zájezdy do Ameriky:</h3>
+<div class="First-minute-america-offer">
+    <div class="f-m-box" >
+
+    </div>
+</div>
+
+<h3 class="title">Zájezdy do Afriky:</h3>
+<div class="First-minute-africa-offer">
+    <div class="f-m-box" >
+
+    </div>
+</div>
+<script src="{% static 'viewer/script.js' %}"></script>
+
+{% endblock %}

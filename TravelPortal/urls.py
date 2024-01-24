@@ -33,6 +33,8 @@ from dal import autocomplete
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', index, name='index'),
+    path('first_minute/', first_minute, name='first_minute'),
+    path('last_minute/', last_minute, name='last_minute'),
 
     path('accounts/login/', LoginView.as_view(), name='login'),  # vlastní view
     path('accounts/signup/', SignUpView.as_view(), name='signup'),  # vlastní view

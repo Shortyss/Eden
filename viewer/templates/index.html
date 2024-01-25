@@ -16,6 +16,18 @@
         <div class="arrow right" onclick="showNextDestination()">&#9655;</div>
     </div>
 </div>
+<div class="offers">
+    <h2 class="title">Užijte si exotiku s naší nabídkou first minute.</h2>
+     <a href="{% url 'first_minute' %}">
+        <img src="{% static 'offer/First_minute.jpg' %}" alt="First Minute Image">
+  </a>
+</div>
+<div class="offers">
+    <h2 class="title">Užijte si naposledy trochu sněhu s  naší nabídkou last minute.</h2>
+    <a href="{% url 'last_minute' %}">
+        <img src="{% static 'offer/Last_minute.jpg' %}" alt="Last Minute Image">
+  </a>
+</div>
 
 <script src="{% static 'viewer/script.js' %}"></script>
 

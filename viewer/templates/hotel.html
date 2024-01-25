@@ -23,7 +23,7 @@
     <div id="hotel-country">Stát: {{ hotel.country.name }}</div>
     <div class="hotel-gallery">
         {% for image in hotel.get_images %}
-        <div class="image-hotel-container"><img src="{{ image.image.url }}" alt="{{ image.description }}" width="350px"></div>
+        <div class="image-hotel-container"><img src="{{ image.image.url }}" alt="{{ image.description }}" width="350"></div>
         {% endfor %}
     </div>
     <div id="hotel-description">Popis: {{ hotel.description }}</div>
@@ -133,7 +133,9 @@
             </div>
 
             <input type="hidden" id="total_price_v" name="total_price" value="">
-            <input id="travelers_input" name="travelers" value="">
+            <input type="hidden" id="travelers_input" name="travelers" value="">
+            <input type="hidden" id="hotel_id" name="hotel_id" value="{{ hotel.id }}">
+            <input type="hidden" id="step" name="step" value="1">
 
             <button id="reservation_button" type="submit" onclick="handleReservationClick()">Rezervovat</button>
 

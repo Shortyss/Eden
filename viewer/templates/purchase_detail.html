@@ -1,0 +1,27 @@
+
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+<h1 class="title">Toto jsou informace k Vašemu zájezdu</h1>
+<div class="reservation-informations">
+    <p><strong>Hotel:</strong> {{ purchase.hotel.name }}</p>
+    <p><strong>Zákazník:</strong> {{ purchase.customer }}</p>
+    <p><strong>Příjezd:</strong> {{ purchase.arrival_date }}</p>
+    <p><strong>Odjezd:</strong> {{ purchase.departure_date }}</p>
+    <p><strong>Počet cestujících:</strong> {{ purchase.travelers }}</p>
+    <p><strong>Strava:</strong> {{ purchase.meal_plan }}</p>
+    <p><strong>Doprava:</strong> {{ purchase.transportation }}</p>
+    <p><strong>Celková cena:</strong> {{ purchase.total_price }}</p>
+</div>
+<h3 class="title">Cestující:</h3>
+<div class="travelers-data">
+  {% for traveler in purchase.traveler.all %}
+    <div class="traveler-detail">
+        <p><strong>Jméno:</strong> {{ traveler }}</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

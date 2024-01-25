@@ -14,11 +14,12 @@
         <label>Informace o cestujících:</label>
         {% for traveler_form in traveler_forms %}
           <div class="traveler-form">
-            {{ traveler_form.as_p }}
+            {{ traveler_form}}
           </div>
         {% endfor %}
       </div>
 
+      <input type="hidden" id="hotel_id" name="hotel_id" value="{{ request.session.hotel_id }}">
       <button type="submit">Potvrdit rezervaci</button>
     </form>
   </div>

@@ -53,33 +53,46 @@ body, html {
     border: hide;
 }
 
+.button a,
+.nav-button a {
+    display: flex;
+    color: #ffff33;
+    text-decoration: none;
+
+}
+
+.nav-button,
 .button,
 button {
+    display:flex;
+    justify-content: center;
+    align-items: center;
     background:  #009999;
     color: #ffff33;
     font-weight: bold;
     border-radius: 5px;
     border: 1.5px solid black;
-    overflow: hide;
+    overflow: hidden;
     cursor: pointer;
     transition: linear .3s;
 }
+.nav-button:hover,
 .button:hover,
 button:hover {
     transform: scale(1.2);
     border: 1.5px solid black;
 }
-
-.navContainer button {
+.navContainer span.nav-button,
+.navContainer span.button {
     height: 30px;
     min-width: 120px;
     font-size: 1em;
 }
 
-
-.navContainer2 button {
-    height: 50px;
-    width: 140px;
+.navContainer2 span.nav-button,
+.navContainer2 span.button {
+    height: 60px;
+    width: 170px;
     font-size: 1.2em;
 }
 
@@ -94,7 +107,8 @@ footer {
 }
 
 .index {
-    margin: 0 70px 20px 70px;
+    margin: 0 auto;
+    max-width: 1080px;
     width: 100vw;
     display: flex;
     text-align: center;
@@ -138,6 +152,7 @@ footer {
   justify-content: center;
 }
 
+.transportation-item,
 .city-item,
 .country-item {
   display: flex;
@@ -286,6 +301,7 @@ footer {
     display: flex;
     flex-wrap: wrap;
 }
+
 
 .hotel-item {
     flex: 0 0 calc(25% - 10px);
@@ -464,31 +480,34 @@ footer {
 .button-container {
   max-width: 80%;
   margin: 0 auto;
-  margin-top: 20px;
-  padding: 20px;
+  margin-top: 10px;
+  padding: 10px;
   border: 1px solid #ddd;
   border-radius: 8px;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .button-container a {
   text-decoration: none;
-  flex: 1 0 30%;
+  flex: 0 0 calc(30% - 5px);
   margin-right: 10px;
 }
 
-.button-container button {
-  display: block;
-  margin-bottom: 10px;
-  padding: 10px 20px;
-  border: 2px solid black;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 16px;
-  width: 100%;
+.button-container span.button {
+    display: flex;
+    flex-direction: column; /* Přidáno pro správné zarovnání textu uvnitř tlačítka */
+    justify-content: center; /* Přidáno pro správné zarovnání textu uvnitř tlačítka */
+    align-items: center; /* Přidáno pro správné zarovnání textu uvnitř tlačítka */
+    padding: 10px 20px;
+    border: 2px solid black;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 20px;
+    width:33%;
 }
 
 .profile-container,
@@ -507,6 +526,7 @@ footer {
 .right-section {
   width: 35%;
 }
+
 
 .login-form {
   width: 40%;
@@ -538,3 +558,86 @@ footer {
     font-size: 18px;
 }
 
+.reservation-confirmation {
+    display: flex;
+    align-items: center;
+    width: 40%;
+    min-width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-details {
+    margin-top: 20px;
+}
+
+.reservation-details p {
+    margin: 5px 0;
+}
+
+
+.reservation-informations,
+.travelers-data {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.reservation-informations p,
+.travelers-data .traveler-detail p {
+  margin: 10px 0;
+}
+
+.traveler-detail {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.profile-purchases {
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.profile-purchases a {
+  display: block;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f4f4f4;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  color: #333;
+  transition: background-color 0.3s ease;
+}
+
+.profile-purchases a:hover {
+  background-color: #ddd;
+}
+
+.no-offers {
+  text-align: center;
+  color: #888; /* Barva šedé pro zprávy o chybě */
+  font-style: italic;
+}
+
+.offers {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.offers img {
+    width: 800px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+.transportation-list {
+    width: 40%
+    margin: 0 auto;
+}

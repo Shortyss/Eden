@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
+    <title>Travel portal</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{% static 'viewer/styles.css' %}">
@@ -15,30 +16,30 @@
     <nav class="navContainer">
         {% if request.user.is_authenticated %}
             <p class="signet_as">Přihlášen jako: {{ request.user.username }} </p>
-            <a href="{% url 'logout' %}"><button id="logout">Odhlásit se</button> </a>
+        <span class="nav-button"><a href="{% url 'logout' %}" id="logout">Odhlásit se</a></span>
             {% if request.user.profile %}
-                <a href="{% url 'profile' pk=request.user.profile.pk %}"><button id="profile-button">Profil</button></a>
+                <span class="nav-button"><a href="{% url 'profile' pk=request.user.profile.pk %}" id="profile-button">Profil</a></span>
             {% else %}
-                <a href="{% url 'profile_create' pk=request.user.pk %}"><button id="create-profile-btn">Vyvořit profil</button></a>
+                <span class="nav-button"><a href="{% url 'profile_create' pk=request.user.pk %}" id="create-profile-btn">Vyvořit profil</a></span>
             {% endif %}
         {% else %}
-            <a href="{% url 'signup' %}"><button id="signup">Registrovat se</button> </a>
-            <a href="{% url 'login' %}"><button id="login">Přihlásit se</button> </a>
+            <span class="nav-button"><a href="{% url 'signup' %}" id="signup">Registrovat se</a></span>
+            <span class="nav-button"><a href="{% url 'login' %}" id="login">Přihlásit se</a></span>
         {% endif %}
         {% if request.user.is_superuser %}
-            <a href="/admin/"><button id="Admin">Admin</button> </a>
+        <span class="nav-button"><a href="/admin/" id="Admin">Admin</a></span>
         {% endif %}
     </nav>
     <nav class="navContainer2">
-        <a href="{% url 'europe' pk=1 %}"><button id="Europe">Evropa</button> </a>
-        <a href="{% url 'asia' pk=3 %}"><button id="Asia">Asie</button> </a>
-        <a href="{% url 'africa' pk=4 %}"><button id="Africa">Afrika</button> </a>
-        <a href="{% url 'america' pk=2 %}"><button id="America">Amerika</button> </a>
-        <a href="{% url 'hotels' %}"><button id="Hotels">Hotely</button> </a>
-        <a href="{% url 'first_minute' %}"><button id="First minute">First minute</button> </a>
-        <a href=""><button id="Last minute">Last minute</button> </a>
+        <span class="nav-button"><a href="{% url 'europe' pk=1 %}" id="Europe">Evropa</a></span>
+        <span class="nav-button"><a href="{% url 'asia' pk=3 %}" id="Asia">Asie</a></span>
+        <span class="nav-button"><a href="{% url 'africa' pk=4 %}" id="Africa">Afrika</a></span>
+        <span class="nav-button"><a href="{% url 'america' pk=2 %}" id="America">Amerika</a></span>
+        <span class="nav-button"><a href="{% url 'hotels' %}" id="Hotels">Hotely</a></span>
+        <span class="nav-button"><a href="{% url 'first_minute' %}" id="First_minute">First minute</a></span>
+        <span class="nav-button"><a href="{% url 'last_minute' %}" id="Last_minute">Last minute</a></span>
         {% if user.is_authenticated and user.is_staff %}
-            <a href="{% url 'administration' %}"><button id="Administration">Administrace</button></a>
+            <span class="nav-button"><a href="{% url 'administration' %}" id="Administration">Administrace</a></span>
         {% endif %}
     </nav>
     {% endif %}

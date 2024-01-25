@@ -163,17 +163,19 @@ class MealPlan(Model):
 #     def __str__(self):
 #         return f"{self.hotel.name} - {self.meal_plan.name} - {self.calculate_total_price}"
 #
-
 class Traveler(Model):
-    first_name = CharField(null=False, blank=False, max_length=68, verbose_name='Jméno')
-    last_name = CharField(null=False, blank=False, max_length=68, verbose_name='Příjmení')
-    birth_date = DateField(null=False, blank=False, default=None, verbose_name='Datum narození')
+
+    first_name = CharField(null=True, blank=True, default=None, max_length=68, verbose_name='Jméno')
+    last_name = CharField(null=True, blank=True, default=None, max_length=68, verbose_name='Příjmení')
+    birth_date = DateField(null=True, blank=True, default=None, verbose_name='Datum narození')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
 
 class Purchase(Model):
+    traveler = ManyToManyField(Traveler, default=None, null=True, blank=True,
+                               related_name='purchase_travelers')
     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, default=None, null=True, blank=True, related_name='purchase_hotel')
     customer = ForeignKey(User, on_delete=CASCADE, related_name='purchase_customer', verbose_name='Zákazník')
     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')

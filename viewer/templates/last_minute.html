@@ -3,7 +3,7 @@
 {% load static %}
 
 {% block content %}
-  <h1 class="title">First minute zájezdy:</h1>
+  <h1 class="title">Last minute nabídka:</h1>
   {% for continent, cities in cities_by_continent.items %}
     <h2 class="title">{{ continent }}</h2>
     {% if cities %}

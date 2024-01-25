@@ -24,6 +24,7 @@ from django.urls import path, include, re_path as url
 import api
 from accounts.views import *
 from viewer.models import *
+from viewer.travels_views import first_minute, last_minute
 from viewer.views import *
 from api.views import *
 
@@ -111,11 +112,15 @@ urlpatterns = [
     path('transportation/delete/<pk>/', TransportationDelete.as_view(), name='transportation_delete'),
 
     path('purchase_create/', PurchaseCreate.as_view(), name='purchase_create'),
+    path('purchase_detail/<pk>/', PurchaseDetail.as_view(), name='purchase_detail'),
+    path('purchase_success/<pk>', purchase_success, name='purchase_success'),
     # path('purchase_create/', purchase_create, name='purchase_create'),
 
     path('airport-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport-autocomplete'),
     path('country-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country-autocomplete'),
     path('city-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=City), name='city-autocomplete'),
+    path('transportation-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Transportation),
+         name='transportation-autocomplete'),
 
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     # path('api/travel_package/', api.views.TravelPackages.as_view()),

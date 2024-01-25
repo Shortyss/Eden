@@ -6,8 +6,9 @@ from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
+from django.db import transaction
 from django.forms.widgets import ChoiceWidget
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic import ListView
 from django_addanother.views import CreatePopupMixin
 from django_addanother.widgets import AddAnotherWidgetWrapper
@@ -36,12 +37,6 @@ def administration(request):
     return render(request, 'administration.html', )
 
 
-def first_minute(request):
-    return render(request, 'first_minute.html', )
-
-
-def last_minute(request):
-    return render(request, 'last_minute.html', )
 # RATING
 
 
@@ -402,7 +397,11 @@ class HotelModelForm(ModelForm):
             ),
             'country': autocomplete.ModelSelect2(
                 url='country-autocomplete'
-            )
+            ),
+            'transportation': AddAnotherWidgetWrapper(
+                Select,
+                reverse_lazy('transportation_create')
+            ),
         }
     prices = HotelPricesFormSet()
 
@@ -433,6 +432,7 @@ def hotel(request, pk):
     try:
         hotel_object = Hotel.objects.get(id=pk)
         request.session['hotel_name'] = hotel_object.name
+        request.session['hotel_id'] = hotel_object.id
     except:
         return render(request, 'index.html')
 
@@ -894,11 +894,11 @@ class TransportationForm(LoginRequiredMixin, CreatePopupMixin, ModelForm):
         widgets = {
             'departure_airport': autocomplete.ModelSelect2(
                 url='airport-autocomplete',
-                forward=['arrival_airport'],  # Předáváme informace o příchozím letišti pro filtrování
+                forward=['arrival_airport'],
             ),
             'arrival_airport': autocomplete.ModelSelect2(
                 url='airport-autocomplete',
-                forward=['departure_airport'],  # Předáváme informace o odchozím letišti pro filtrování
+                forward=['departure_airport'],
             ),
         }
 
@@ -987,9 +987,82 @@ class PurchaseForm(ModelForm):
             'total_price': TextInput(attrs={'readonly': 'readonly'})
         }
 
-    # def __init__(self, *args, **kwargs):
-    #     super(PurchaseForm, self).__init__(*args, **kwargs)
-    #     self.fields['hotel'].disabled = True
+
+class PurchaseCreate(View):
+    template_name = 'purchase_create.html'
+
+    def post(self, request, *args, **kwargs):
+        purchase_form = PurchaseForm(request.POST)
+        travelers_forms = []
+        travelers_list = []
+
+        if purchase_form.is_valid():
+            purchase = purchase_form.save(commit=False)
+            purchase.customer = request.user
+            hotel_id = request.POST.get('hotel_id')
+            hotel_instance = Hotel.objects.get(pk=int(hotel_id))
+            purchase.hotel = hotel_instance
+            purchase.arrival_date = request.POST.get('arrival_date')
+            purchase.departure_date = request.POST.get('departure_date')
+            purchase.meal_plan_id = request.POST.get('meal_plan')
+            purchase.number_of_single_rooms = request.POST.get('single_rooms')
+            purchase.number_of_double_rooms = request.POST.get('double_rooms')
+            purchase.number_of_family_rooms = request.POST.get('family_rooms')
+            purchase.number_of_suites = request.POST.get('suite_rooms')
+            purchase.transportation_id = request.POST.get('transportation')
+            purchase.total_price = request.POST.get('total_price')
+
+            num_travelers = int(request.POST.get('travelers', 0))
+            for i in range(num_travelers):
+                traveler_form = TravelerForm(request.POST, prefix=f'travelers_{i}')
+                if traveler_form.is_valid():
+                    print('validní travelers')
+                    traveler = traveler_form.save(commit=False)
+                    travelers_forms.append(traveler_form)
+                    if traveler.first_name and traveler.last_name:
+                        traveler.purchase = purchase
+                        traveler.save()
+
+                        travelers_list.append(traveler)
+                        print('traveler:', traveler)
+
+                else:
+                    print(traveler_form.errors)
+                    travelers_forms.append(TravelerForm(prefix=f'number_of_travelers_{i}'))
+            print('hotel', purchase.hotel)
+
+            meal_plan_id = purchase.meal_plan_id
+            meal_plan_instance = MealPlan.objects.get(pk=meal_plan_id)
+            meal_plan_str = str(meal_plan_instance)
+
+            transportation_id = purchase.transportation_id
+            transportation_instance = Transportation.objects.get(pk=transportation_id)
+            transportation_str = str(transportation_instance)
+
+            travelers = int(request.POST.get('travelers', 0))
+            print('return úspěšný')
+            if request.POST.get('step') == "1":
+                return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+                                                                'meal_plan': meal_plan_str,
+                                                                'traveler_forms': travelers_forms,
+                                                                'travelers': travelers})
+            purchase.save()
+            for traveler in travelers_list:
+                purchase.traveler.add(traveler)
+            purchase.save()
+            return render(request, 'purchase_success.html', {'purchase_form': purchase_form,
+                                                             'meal_plan': meal_plan_str,
+                                                             'transportation': transportation_str,
+                                                             'customer': purchase.customer,
+                                                             'hotel_name': purchase.hotel,
+                                                             'total_price': purchase.total_price,
+                                                             'arrival_date': purchase.arrival_date,
+                                                             'departure_date': purchase.departure_date,
+                                                             'traveler_forms': travelers_forms, 'travelers': travelers})
+        else:
+            print(purchase_form.errors)
+            return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+                                                            'traveler_forms': travelers_forms})
 
 
 # class PurchaseCreate(View):
@@ -1000,10 +1073,11 @@ class PurchaseForm(ModelForm):
 #         travelers_forms = []
 #
 #         if purchase_form.is_valid():
-#             print('ahoj')
 #             purchase = purchase_form.save(commit=False)
 #             purchase.customer = request.user
-#             purchase.hotel_id = request.POST.get('hotel')
+#             hotel_id = request.POST.get('hotel_id')
+#             hotel_instance = Hotel.objects.get(pk=int(hotel_id))
+#             purchase.hotel = hotel_instance
 #             purchase.arrival_date = request.POST.get('arrival_date')
 #             purchase.departure_date = request.POST.get('departure_date')
 #             purchase.meal_plan_id = request.POST.get('meal_plan')
@@ -1011,80 +1085,78 @@ class PurchaseForm(ModelForm):
 #             purchase.number_of_double_rooms = request.POST.get('double_rooms')
 #             purchase.number_of_family_rooms = request.POST.get('family_rooms')
 #             purchase.number_of_suites = request.POST.get('suite_rooms')
-#             purchase.transportation = request.POST.get('transportation')
-#             purchase.travelers = request.POST.get('travelers')
+#             purchase.transportation_id = request.POST.get('transportation')
 #             purchase.total_price = request.POST.get('total_price')
-#             purchase.save()
 #
-#             # Získání vytvořené rezervace
-#             purchase = get_object_or_404(Purchase, pk=purchase.pk)
-#
-#             # Přidání formulářů cestujících na základě počtu
-#             num_travelers = int(request.POST.get('number_of_travelers', 0))
+#             num_travelers = int(request.POST.get('travelers', 0))
 #             for i in range(num_travelers):
-#                 traveler_form = TravelerForm(request.POST, prefix=f'number_of_travelers_{i}')
+#                 traveler_form = TravelerForm(request.POST, prefix=f'travelers_{i}')
 #                 if traveler_form.is_valid():
+#                     print('validní travelers')
 #                     traveler = traveler_form.save(commit=False)
 #                     traveler.purchase = purchase
 #                     traveler.save()
 #                     travelers_forms.append(traveler_form)
+#
 #                 else:
 #                     print(traveler_form.errors)
 #                     travelers_forms.append(TravelerForm(prefix=f'number_of_travelers_{i}'))
+#             print('hotel', purchase.hotel)
 #
-#             travelers = int(request.POST.get('travelers', 0))
+#             # Save the purchase only after the button is clicked
+#             if request.POST.get('button') == "Potvrdit rezervaci":
+#                 # Save the purchase
+#                 purchase.save()
 #
-#             return render(request, 'purchase_success.html', {'purchase': purchase,
-#                                                              'traveler_forms': travelers_forms, 'travelers': travelers})
-#         print(purchase_form.errors)
-#         return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
-#                                                         'traveler_forms': travelers_forms})
+#                 # Get meal plan name
+#                 meal_plan_id = purchase.meal_plan_id
+#                 meal_plan_instance = MealPlan.objects.get(pk=meal_plan_id)
+#                 meal_plan_str = str(meal_plan_instance)
+#
+#                 # Get transportation name
+#                 transportation_id = purchase.transportation_id
+#                 transportation_instance = Transportation.objects.get(pk=transportation_id)
+#                 transportation_str = str(transportation_instance)
+#
+#                 # Get travelers
+#                 travelers = int(request.POST.get('travelers', 0))
+#
+#                 # Redirect to the purchase_success.html template
+#                 return redirect('purchase_success',
+#                                 pk=purchase.pk,
+#                                 meal_plan=meal_plan_str,
+#                                 transportation=transportation_str,
+#                                 customer=purchase.customer,
+#                                 hotel_name=purchase.hotel,
+#                                 total_price=purchase.total_price,
+#                                 arrival_date=purchase.arrival_date,
+#                                 departure_date=purchase.departure_date,
+#                                 travelers_forms=travelers_forms,
+#                                 travelers=travelers)
+#
+#         else:
+#             print(purchase_form.errors)
+#             return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+#                                                             'traveler_forms': travelers_forms})
+#
+#
 
-class PurchaseCreate(View):
-    template_name = 'purchase_create.html'
+class PurchaseDetail(View):
+    template_name = 'purchase_detail.html'
 
-    def post(self, request, *args, **kwargs):
-        purchase_form = PurchaseForm(request.POST)
-        travelers_forms = []
+    def get(self, request, pk):
+        purchase_object = Purchase.objects.get(pk=pk)
+        context = {'purchase': purchase_object}
+        return render(request, self.template_name, context)
 
-        if purchase_form.is_valid():
-            print('ahoj')
-            purchase = purchase_form.save(commit=False)
-            purchase.customer = request.user
-            purchase.hotel_id = request.POST.get('hotel')
-            purchase.arrival_date = request.POST.get('arrival_date')
-            purchase.departure_date = request.POST.get('departure_date')
-            purchase.meal_plan_id = request.POST.get('meal_plan')
-            purchase.number_of_single_rooms = request.POST.get('single_rooms')
-            purchase.number_of_double_rooms = request.POST.get('double_rooms')
-            purchase.number_of_family_rooms = request.POST.get('family_rooms')
-            purchase.number_of_suites = request.POST.get('suite_rooms')
-            purchase.transportation_id = request.POST.get('transportation_id')
-            purchase.total_price = request.POST.get('total_price')
-            print('před save')
-            purchase.save()
 
-            # Získání vytvořené rezervace
-            purchase = get_object_or_404(Purchase, pk=purchase.pk)
+def purchase_success(request, pk):
+    purchase = Purchase.objects.get(pk=pk)
+    context = {'purchase': purchase}
+    return render(request, 'purchase_success.html', context)
 
-            # Přidání formulářů cestujících na základě počtu
-            num_travelers = int(request.POST.get('travelers', 0))
-            for i in range(num_travelers):
-                traveler_form = TravelerForm(request.POST, prefix=f'travelers_{i}')
-                if traveler_form.is_valid():
-                    traveler = traveler_form.save(commit=False)
-                    traveler.purchase = purchase
-                    traveler.save()
-                    travelers_forms.append(traveler_form)
-                else:
-                    print(traveler_form.errors)
-                    travelers_forms.append(TravelerForm(prefix=f'number_of_travelers_{i}'))
 
-            travelers = int(request.POST.get('travelers', 0))
-            print('return úspěšný')
-            return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
-                                                             'traveler_forms': travelers_forms, 'travelers': travelers})
-        else:
-            print(purchase_form.errors)
-            return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
-                                                            'traveler_forms': travelers_forms})
+def availability(request, pk, arrival_date, departure_date):
+    hotel = Hotel.objects.get(id=pk)
+    purchase = Purchase.objects.filter(hotel=hotel, departure_date__gte=arrival_date,)
+    pass

@@ -1,4 +1,29 @@
 document.addEventListener('DOMContentLoaded', function () {
+    function showAlert(message) {
+        alert(message);
+    }
+
+    showAlert('Pozor nejedná se o skutečnou cestovní kancelář! Jde pouze o ukázkovou stránku.')
+
+    function getAvailableRooms(hotelId, arrivalDate, departureDate) {
+        return fetch(`/api/hotel_custom_api/${hotelId}/?arrival_date=${arrivalDate}&departure_date=${departureDate}`)
+            .then(response => response.json())
+            .then(data => {
+                return data.available_rooms;
+            })
+            .catch(error => console.error('Error fetching available rooms:', error));
+    }
+
+    function updateAvailableRoomsCount(hotelId, arrivalDate, departureDate) {
+        return getAvailableRooms(hotelId, arrivalDate, departureDate).then(availableRooms => {
+            // Zobrazit počet volných pokojů pro každý typ pokoje
+            document.getElementById('available_single_rooms').textContent = availableRooms.single_rooms;
+            document.getElementById('available_double_rooms').textContent = availableRooms.double_rooms;
+            document.getElementById('available_family_rooms').textContent = availableRooms.family_rooms;
+            document.getElementById('available_suite_rooms').textContent = availableRooms.suite_rooms;
+        });
+    }
+
     function checkCapacity(adults, children, numberOfRooms, maxCapacity) {
         var totalCapacity = numberOfRooms * maxCapacity;
 
@@ -77,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             sessionStorage.setItem(key, JSON.stringify(existingData));
 
-            console.log('Data byla úspěšně uložena do session:', key, value);
         } catch (error) {
             console.error('Chyba při ukládání do sessionStorage:', error);
         }
@@ -126,14 +150,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                  var startDate = document.getElementById('arrival_date').value;
                  var endDate = document.getElementById('departure_date').value;
-                 console.log('Prices:', prices);
 
                  if (selectedRoomType) {
                      price = calculateTotalPrice(prices, selectedRoomType, selectedPricesRoomType, numberOfRooms, startDate, endDate);
 
                     totalPrice += price;
 
-                    console.log('totalPrice:', totalPrice)
                  } else {
                     console.error('No room type selected.')
                  }
@@ -164,10 +186,6 @@ document.addEventListener('DOMContentLoaded', function () {
                         var startDate = document.getElementById('arrival_date').value;
                         var endDate = document.getElementById('departure_date').value;
 
-                        console.log('Room Type:', selectedRoomType);
-
-                        console.log('Total Price (Accommodation):', totalPrice);
-
                         if (adults > 0 || children > 0) {
                             var mealPlanId = document.getElementById('meal_plan').value;
                             fetch('http://127.0.0.1:8000/api/meal_plan_api/' + mealPlanId + '/')
@@ -176,9 +194,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                     var stayDuration = (new Date(endDate) - new Date(startDate)) / (1000 * 60 * 60 * 24);
 
                                     var mealPlanPrice = calculateMealPlanPrice(mealPlan, adults, children, stayDuration);
-
-                                    console.log('Meal Plan:', mealPlan);
-                                    console.log('Meal Plan Price:', mealPlanPrice);
 
                                     var transportationId = document.getElementById('transportation').value;
 
@@ -189,8 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                             .then(response => response.json())
                                             .then(transportation => {
                                                 transportationPrice = parseFloat(transportation.price);
-                                                console.log('Transportation:', transportation);
-                                                console.log('Transportation Price:', transportationPrice);
 
                                                 var transportationPrice = calculateTransportationPrice(transportation, adults, children);
                                                 var totalTotalPriceWithTransportation = totalPrice + mealPlanPrice + transportationPrice;
@@ -247,6 +260,19 @@ document.addEventListener('DOMContentLoaded', function () {
         return '';
     }
 
+    document.getElementById('arrival_date').addEventListener('change', () => {
+        const arrivalDate = document.getElementById('arrival_date').value;
+        const departureDate = document.getElementById('departure_date').value;
+        updateAvailableRoomsCount(hotelId, arrivalDate, departureDate);
+    });
+
+    document.getElementById('departure_date').addEventListener('change', () => {
+        const arrivalDate = document.getElementById('arrival_date').value;
+        const departureDate = document.getElementById('departure_date').value;
+        updateAvailableRoomsCount(hotelId, arrivalDate, departureDate);
+    });
+
+
     var formFields = ['single_rooms', 'adults_single_rooms', 'children_single_rooms',
         'double_rooms', 'adults_double_rooms', 'children_double_rooms',
         'family_rooms', 'adults_family_rooms', 'children_family_rooms',
@@ -268,6 +294,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var travelersValue = document.getElementById('travelers').textContent.trim();
     var totalPriceValue = document.getElementById('total_price').textContent.trim();
 
+    const currentUrl = window.location.href;
+    const hotelId = currentUrl.split('/hotel/')[1].split('/')[0];
+    const arrivalDate = document.getElementById('arrival_date').value;
+    const departureDate = document.getElementById('departure_date').value;
+    updateAvailableRoomsCount(hotelId, arrivalDate, departureDate);
+
     updateTotalPrice();
 });
 
@@ -286,8 +318,7 @@ function updateTime() {
         dateTimeElement.textContent = formattedDateTime;
     }
 }
-console.log("Skript byl načten.");
-console.log(window.location.pathname);
+
 setInterval(updateTime, 1000);
 updateTime();
 
@@ -364,11 +395,9 @@ if (window.location.pathname.endsWith("/")) {
         var arrowLeft = document.querySelector('.arrow.left');
         var arrowRight = document.querySelector('.arrow.right');
 
-        // Přidat třídy pro zvýraznění šipek
         arrowLeft.classList.add('highlighted-arrow');
         arrowRight.classList.add('highlighted-arrow');
 
-        // Přidává obrázek a odkaz do imageContainer
         var oldImage = imageContainer.querySelector('a');
         if (oldImage) {
             imageContainer.replaceChild(destinationLink, oldImage);
@@ -376,7 +405,6 @@ if (window.location.pathname.endsWith("/")) {
             imageContainer.appendChild(destinationLink);
         }
 
-        // Přidává název destinace pod imageContainer
         var oldName = imageContainer.querySelector('.destination-name');
         if (oldName) {
             imageContainer.replaceChild(destinationName, oldName);
@@ -391,13 +419,10 @@ if (window.location.pathname.endsWith("/")) {
 
 
 function copyToInput() {
-    console.log('copyToInput called');
     var spanValue = document.getElementById('total_price').textContent;
 
-    // Použití regulárního výrazu pro extrakci čísla
     var numberMatch = spanValue.match(/\d+/);
 
-    // Získání prvního nalezeného čísla
     var numberValue = numberMatch ? parseInt(numberMatch[0]) : 0;
 
     var inputElement = document.getElementById('total_price_v');
@@ -405,13 +430,10 @@ function copyToInput() {
 }
 
 function copyTravelersToInput() {
-    console.log('copyTravelersToInput called');
     var travelersValue = document.getElementById('travelers').textContent;
 
-    // Použití regulárního výrazu pro extrakci čísla
     var numberMatch = travelersValue.match(/\d+/);
 
-    // Získání prvního nalezeného čísla
     var numberValue = numberMatch ? parseInt(numberMatch[0]) : 0;
 
     var inputElement = document.getElementById('travelers_input');
@@ -432,3 +454,70 @@ function handleReservationClick() {
     copyToInput();
     copyTravelersToInput();
 }
+
+var currentUrl = window.location.href;
+var hotelId = currentUrl.split('/hotel/')[1].split('/')[0];
+
+function getAvailableRooms(hotelId, arrivalDate, departureDate) {
+    fetch(`/api/hotel_custom_api/${hotelId}/?arrival_date=${arrivalDate}&departure_date=${departureDate}`)
+        .then(response => response.json())
+        .then(data => {
+            // Zpracování dat z API
+            const availableRooms = data.available_rooms;
+            // Vytvořte objekt s klíči pro typy pokojů a s hodnotami počtu dostupných pokojů
+            const responseObject = {
+                single_rooms: availableRooms.single_rooms,
+                double_rooms: availableRooms.double_rooms,
+                family_rooms: availableRooms.family_rooms,
+                suite_rooms: availableRooms.suite_rooms
+            };
+            return responseObject;
+        })
+        .catch(error => console.error('Error fetching available rooms:', error));
+}
+
+document.getElementById('arrival_date').addEventListener('change', () => {
+    const arrivalDate = document.getElementById('arrival_date').value;
+    const departureDate = document.getElementById('departure_date').value;
+    getAvailableRooms(hotelId, arrivalDate, departureDate).then(data => {
+        const availableRoomsSingleElement = document.getElementById('available_rooms_single');
+        if (availableRoomsSingleElement) {
+            availableRoomsSingleElement.textContent = data.single_rooms;
+        }
+        const availableRoomsDoubleElement = document.getElementById('available_rooms_double');
+        if (availableRoomsDoubleElement) {
+            availableRoomsDoubleElement.textContent = data.double_rooms;
+        }
+        const availableRoomsFamilyElement = document.getElementById('available_rooms_family');
+        if (availableRoomsFamilyElement) {
+            availableRoomsFamilyElement.textContent = data.family_rooms;
+        }
+        const availableRoomsSuiteElement = document.getElementById('available_rooms_suite');
+        if (availableRoomsSuiteElement) {
+            availableRoomsSuiteElement.textContent = data.suite_rooms;
+        }
+    });
+});
+
+document.getElementById('departure_date').addEventListener('change', () => {
+    const arrivalDate = document.getElementById('arrival_date').value;
+    const departureDate = document.getElementById('departure_date').value;
+    getAvailableRooms(hotelId, arrivalDate, departureDate).then(data => {
+        const availableRoomsSingleElement = document.getElementById('available_rooms_single');
+        if (availableRoomsSingleElement) {
+            availableRoomsSingleElement.textContent = data.single_rooms;
+        }
+        const availableRoomsDoubleElement = document.getElementById('available_rooms_double');
+        if (availableRoomsDoubleElement) {
+            availableRoomsDoubleElement.textContent = data.double_rooms;
+        }
+        const availableRoomsFamilyElement = document.getElementById('available_rooms_family');
+        if (availableRoomsFamilyElement) {
+            availableRoomsFamilyElement.textContent = data.family_rooms;
+        }
+        const availableRoomsSuiteElement = document.getElementById('available_rooms_suite');
+        if (availableRoomsSuiteElement) {
+            availableRoomsSuiteElement.textContent = data.suite_rooms;
+        }
+    });
+});

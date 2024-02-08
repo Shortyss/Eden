@@ -99,12 +99,6 @@ urlpatterns = [
     path('meals/update/<pk>/', MealUpdate.as_view(), name='meal_update'),
     path('meals/delete/<pk>', MealDeleteView.as_view(), name='meal_delete'),
 
-    # path('travel_package_admin/', TravelPackageView.as_view(), name='travel_package_admin'),
-    # path('travel_package/<pk>/', travel_package, name='travel_package'),
-    # path('travel_package_create/', TravelPackageCreate.as_view(), name='travel_package_create'),
-    # path('travel_package/update/<pk>/', TravelPackageUpdate.as_view(), name='travel_package_update'),
-    # path('travel_package/delete/<pk>/', TravelPackageDelete.as_view(), name='travel_package_delete'),
-
     path('transportation_admin/', TransportationView.as_view(), name='transportation_admin'),
     path('transportation/<pk>/', transportation, name='transportation'),
     path('transportation_create/', TransportationCreate.as_view(), name='transportation_create'),
@@ -114,19 +108,21 @@ urlpatterns = [
     path('purchase_create/', PurchaseCreate.as_view(), name='purchase_create'),
     path('purchase_detail/<pk>/', PurchaseDetail.as_view(), name='purchase_detail'),
     path('purchase_success/<pk>', purchase_success, name='purchase_success'),
-    # path('purchase_create/', purchase_create, name='purchase_create'),
 
-    path('airport-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport-autocomplete'),
-    path('country-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country-autocomplete'),
-    path('city-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=City), name='city-autocomplete'),
-    path('transportation-autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Transportation),
-         name='transportation-autocomplete'),
+    path('airport_autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Airport), name='airport_autocomplete'),
+    path('country_autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Country), name='country_autocomplete'),
+    path('city_autocomplete/', autocomplete.Select2QuerySetView.as_view(model=City), name='city_autocomplete'),
+    path('transportation_autocomplete/', autocomplete.Select2QuerySetView.as_view(model=Transportation),
+         name='transportation_autocomplete'),
 
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-    # path('api/travel_package/', api.views.TravelPackages.as_view()),
     path('api/prices_api/<pk>/', api.views.PricesAPI.as_view()),
     path('api/transportation_api/<pk>/', api.views.TransportationAPI.as_view()),
     path('api/meal_plan_api/<pk>/', api.views.MealPlanAPI.as_view()),
+    path('api/hotel_api/<pk>/', api.views.HotelAPI.as_view()),
+    path('api/purchase_api/<pk>/', api.views.PurchaseAPI.as_view()),
+    path('api/hotel_custom_api/<pk>/', api.views.HotelCustomApi.as_view()),
     path('save_data_to_session/', SaveDataToSessionView.as_view(), name='save_data_to_session'),
+
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

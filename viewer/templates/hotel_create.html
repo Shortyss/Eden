@@ -12,6 +12,7 @@
             {{ form.as_table }}
         {% endfor %}
         <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+        {{ form.media }}
         {{ prices_formset.media }}
     </table>
     <input type="submit" value="Potvrdit" class="btn btn-submit">

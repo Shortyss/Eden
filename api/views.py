@@ -37,6 +37,41 @@ class MealPlanAPI(mixins.RetrieveModelMixin, generics.GenericAPIView):
         return self.retrieve(request, *args, **kwargs)
 
 
+class HotelAPI(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Hotel.objects.all()
+    serializer_class = HotelSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
+class HotelCustomApi(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Hotel.objects.all()
+    serializer_class = HotelCustomSerializer
+
+    def get(self, request, pk, *args, **kwargs):
+        hotel = Hotel.objects.get(id=pk)
+        instance = self.get_object()
+        arrival_date = self.request.query_params.get('arrival_date')
+        departure_date = self.request.query_params.get('departure_date')
+        print('API')
+
+        if arrival_date and departure_date:
+            context = hotel.get_available_rooms(room_type='all', quantity=0, arrival_date=arrival_date,
+                                                departure_date=departure_date)
+            return Response(context)
+        else:
+            return super().get(request, *args, **kwargs)
+
+
+class PurchaseAPI(mixins.RetrieveModelMixin, generics.GenericAPIView):
+    queryset = Purchase.objects.all()
+    serializer_class = PurchaseSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.retrieve(request, *args, **kwargs)
+
+
 class SaveDataToSessionView(View):
     def post(self, request, *args, **kwargs):
         transportation = request.POST.get('transportation')

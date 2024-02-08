@@ -50,7 +50,7 @@
                         <a href="{% url 'hotel' hotel.id %}">{{ hotel.name }} již od: {{ hotel.current_price }} Kč</a>
                         {% if hotel.get_images %}
                             <div class="image-container">
-                                <img src="{{ hotel.get_images.0.image.url }}" alt="{{ hotel.get_images.0.description }}" width="250">
+                                <img src="{{ hotel.get_images.0.image.url }}" alt="{{ hotel.get_images.0.description }}" width="250" height="250">
                             </div>
                         {% endif %}
                     </div>

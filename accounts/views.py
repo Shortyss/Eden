@@ -11,6 +11,8 @@ from accounts.models import *
 from django.forms import ModelForm, ModelChoiceField, HiddenInput, CharField, EmailField, ImageField, \
     ModelMultipleChoiceField, CheckboxSelectMultiple
 
+from viewer.models import Purchase
+
 
 # Create your views here.
 
@@ -87,12 +89,12 @@ class ProfileCreateView(CreateView):
     model = Profile
     form_class = ProfileModelForm
     template_name = 'profile_create.html'
-    success_url = reverse_lazy('profile')
+    success_url = reverse_lazy('index')
 
     user_image = ImageField(required=False)
 
     def get_success_url(self):
-        return reverse('profile', kwargs={'pk': self.object.user.pk})
+        return reverse('index')
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -115,17 +117,18 @@ class ProfileCreateView(CreateView):
             queryset = self.get_queryset()
         user_profile = getattr(self.request.user, 'profile', None)
         if user_profile:
-            obj = get_object_or_404(queryset, user=user_profile.user)
+            obj, created = queryset.get_or_create(user=user_profile.user)
             return obj
         else:
-            raise Http404("Profil neexistuje")
+            return queryset.create(user=self.request.user)
 
 
 @login_required
 def profile(request, pk):
     user_profile = Profile.objects.get(id=pk)
     images = UserImage.objects.filter(user=user_profile)
-    context = {'profile': user_profile, 'images': images}
+    purchases = Purchase.objects.filter(customer=request.user)
+    context = {'profile': user_profile, 'images': images, 'purchases': purchases}
     return render(request, 'profile.html', context)
 
 

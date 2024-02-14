@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+  <h1 class="title">Last minute nabídka:</h1>
+  {% for continent, cities in cities_by_continent.items %}
+    <h2 class="title">{{ continent }}</h2>
+    {% if cities %}
+      <ul class="city-list">
+        {% for city in cities %}
+          <li>
+            <div class="city-item">
+              <img class="city-img" src="{% static 'cities/' %}{{ city.name|lower }}.jpg" alt="{{ city.name }}" width="300" height="250">
+              <a href="{% url 'city' city.id %}" class="city-link">{{ city.name }}</a>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="no-offers">Žádné nabídky v {{ continent }} nejsou k dispozici.</p>
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+

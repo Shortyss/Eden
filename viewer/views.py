@@ -1,28 +1,24 @@
 import json
-from datetime import datetime
 from logging import getLogger
 
 from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.forms.widgets import ChoiceWidget
-from django.http import HttpResponse
-from django.views.generic import ListView
+from django.http import HttpResponse, HttpResponseRedirect
 from django_addanother.views import CreatePopupMixin
 from django_addanother.widgets import AddAnotherWidgetWrapper
 
 from viewer.models import *
-from django.core.files.base import ContentFile
-from django.db.models import Avg, Q
+from django.db.models import Avg, Q, F
 from django.forms import ModelForm, Form, ModelMultipleChoiceField, ChoiceField, Select, inlineformset_factory, \
     CharField, Textarea, ClearableFileInput, FileField, HiddenInput, FileInput, SelectDateWidget, forms, \
     CheckboxSelectMultiple, MultipleChoiceField, SelectMultiple, DateInput, TextInput, ModelChoiceField
 from django.shortcuts import render, redirect, get_object_or_404
-from django.utils.text import slugify
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
+from datetime import datetime
 
 # Create your views here.
 LOGGER = getLogger()
@@ -119,8 +115,6 @@ class ContinentCountriesView(View):
     def get(self, request, pk):
         continent_object = Continent.objects.get(id=pk)
         countries = Country.objects.filter(continent=continent_object)
-        print(countries)
-        print(continent_object)
         return render(request, self.template_name, {'countries': countries})
 
 
@@ -164,7 +158,7 @@ def country(request, pk):
     return render(request, 'country.html', context)
 
 
-class CountryModelForm(ModelForm):
+class CountryModelForm(ModelForm,CreatePopupMixin):
 
     class Meta:
         model = Country
@@ -221,7 +215,7 @@ def island(request, pk):
     return render(request, 'island.html', context)
 
 
-class IslandModelForm(ModelForm):
+class IslandModelForm(ModelForm,CreatePopupMixin):
     class Meta:
         model = Island
         fields = '__all__'
@@ -229,14 +223,14 @@ class IslandModelForm(ModelForm):
         widgets = {
             'country': AddAnotherWidgetWrapper(
                 autocomplete.ModelSelect2(
-                    url='country-autocomplete',
+                    url='country_autocomplete',
                     forward=['country'],
                 ),
                 reverse_lazy('country_create')
             ),
             'city': AddAnotherWidgetWrapper(
                 autocomplete.ModelSelect2(
-                    url='city-autocomplete',
+                    url='city_autocomplete',
                     forward=['city'],
                 ),
                 reverse_lazy('city_create')
@@ -292,7 +286,7 @@ def city(request, pk):
     return render(request, 'city.html', context)
 
 
-class CityModelForm(ModelForm):
+class CityModelForm(ModelForm,CreatePopupMixin):
     class Meta:
         model = City
         fields = '__all__'
@@ -300,7 +294,7 @@ class CityModelForm(ModelForm):
         widgets = {
             'country': AddAnotherWidgetWrapper(
                 autocomplete.ModelSelect2(
-                    url='country-autocomplete',
+                    url='country_autocomplete',
                     forward=['country'],
                 ),
                 reverse_lazy('country_create')
@@ -362,14 +356,11 @@ class PricesForm(ModelForm):
 
 def add_price(request):
     if request.method == 'POST':
-        print('add_price')
         form = PricesForm(request.POST)
         if form.is_valid():
             form.save()
-            print('uloženo')
         return redirect('administration')
     else:
-        print('mimo_add_price')
         form = PricesForm()
 
     return render(request, 'add_price.html', {'form': form})
@@ -380,7 +371,7 @@ HotelPricesFormSet = inlineformset_factory(Hotel, Prices, form=PricesForm, extra
 # Hotel
 
 
-class HotelModelForm(ModelForm):
+class HotelModelForm(ModelForm, CreatePopupMixin):
     class Meta:
         model = Hotel
         fields = '__all__'
@@ -389,20 +380,23 @@ class HotelModelForm(ModelForm):
         widgets = {
             'city': AddAnotherWidgetWrapper(
                 autocomplete.ModelSelect2(
-                    url='city-autocomplete',
-                    forward=['city'],
+                    url='city_autocomplete'
                 ),
                 reverse_lazy('city_create')
             ),
             'country': autocomplete.ModelSelect2(
-                url='country-autocomplete'
-            )
+                url='country_autocomplete'
+            ),
+            'transportation': AddAnotherWidgetWrapper(
+                Select,
+                reverse_lazy('transportation_create')
+            ),
         }
     prices = HotelPricesFormSet()
 
     country = CharField(widget=HiddenInput(), required=False)
 
-    images = MultiFileField(required=False, min_num=1, max_num=8, max_file_size=1024*1024*5)
+    images = MultiFileField(required=False, min_num=1, max_num=15, max_file_size=1024*1024*5)
 
     def clean_name(self):
         initial_form = super().clean()
@@ -413,8 +407,11 @@ class HotelModelForm(ModelForm):
         return super().clean()
 
     def save(self, commit=True):
-        instance = super().save(commit)
+        instance = super().save(commit=False)
         images = self.cleaned_data.get('images')
+
+        if commit:
+            instance.save()
 
         if images:
             for image in images:
@@ -427,6 +424,7 @@ def hotel(request, pk):
     try:
         hotel_object = Hotel.objects.get(id=pk)
         request.session['hotel_name'] = hotel_object.name
+        request.session['hotel_id'] = hotel_object.id
     except:
         return render(request, 'index.html')
 
@@ -446,7 +444,7 @@ def hotel(request, pk):
 
     meal_plans = MealPlan.objects.all()
 
-    current_date = datetime.now().date()
+    current_date = datetime.now()
     week_later_date = current_date + timedelta(days=7)
 
     double_room_prices = Prices.objects.filter(
@@ -457,7 +455,6 @@ def hotel(request, pk):
     ).order_by('-arrival_date').first()
 
     if double_room_prices:
-        # Vypočítá celkovou cenu za týdenní pobyt
         nights_in_week = (week_later_date - current_date).days
         total_price_for_week = double_room_prices.price_double_room * nights_in_week
 
@@ -481,13 +478,19 @@ def hotel(request, pk):
         family_rooms = int(request.POST.get('family_rooms', 0))
         suite_rooms = int(request.POST.get('suite_rooms', 0))
 
+        transportation = request.POST.get('transportation')
+        travelers = int(request.POST.get('travelers'))
+        total_price = request.POST.get('total_price', '').strip()
+
         request.session['room_counts'] = {
             'single_rooms': single_rooms,
             'double_rooms': double_rooms,
             'family_rooms': family_rooms,
             'suite_rooms': suite_rooms,
+            'transportation': transportation,
+            'travelers': travelers,
+            'total_price': total_price,
         }
-
         return redirect('purchase_create')
 
     context = {'hotel': hotel_object, 'avg_rating': avg_rating,
@@ -567,7 +570,7 @@ class HotelCreateView(LoginRequiredMixin, CreateView):
     permission_required = 'administration'
 
     def form_valid(self, form):
-        self.object = form.save(commit=False)
+        self.object = form.save(commit=True)
         city = form.cleaned_data.get('city')
         country = city.country if city else None
         self.object.country = country
@@ -579,9 +582,10 @@ class HotelCreateView(LoginRequiredMixin, CreateView):
             prices_formset.save()
             return super().form_valid(form)
         else:
-            return self.form_invalid(form, prices_formset)
+            return self.form_invalid(form)
 
     def form_invalid(self, form, prices_formset):
+        prices_formset = form.prices
         return self.render_to_response(self.get_context_data(form=form, prices_formset=prices_formset))
 
     def get_context_data(self, **kwargs):
@@ -616,8 +620,6 @@ class HotelUpdateView(LoginRequiredMixin, UpdateView):
 
     def form_invalid(self, form):
         prices_formset = HotelPricesFormSet(self.request.POST, instance=self.object)
-        print("Main Form Errors:", form.errors)
-        print("Formset Errors:", prices_formset.errors)
         return self.render_to_response(self.get_context_data(form=form, prices_formset=prices_formset))
 
     def get_context_data(self, **kwargs):
@@ -641,22 +643,26 @@ def country_autocomplete(request):
     return HttpResponse(json.dumps(json_data), content_type="application/javascript")
 
 
-class HotelFilterForm(Form):
+class HotelFilterForm(Form, CreatePopupMixin):
     continent = ModelMultipleChoiceField(queryset=Continent.objects.all(), required=False, label='Podle kontinentu',
                                          widget=CheckboxSelectMultiple)
 
-    country = ModelChoiceField(
-        queryset=Country.objects.all(),
+    country = ModelMultipleChoiceField(
+        queryset=Country.objects.all().order_by('name'),
         required=False,
-        widget=autocomplete.ModelSelect2(url='country-autocomplete')
+        label='Podle země',
+        widget=autocomplete.ModelSelect2Multiple(
+            url='country_autocomplete',
+            attrs={'data-placeholder': 'Začněte psát název země...'}
+        )
     )
 
     cities = ModelMultipleChoiceField(
-        queryset=City.objects.all(),
+        queryset=City.objects.all().order_by('name'),
         required=False,
         label='Podle města',
         widget=autocomplete.ModelSelect2Multiple(
-            url='city-autocomplete',
+            url='city_autocomplete',
             attrs={'data-placeholder': 'Začněte psát název města...'}
         )
     )
@@ -703,7 +709,7 @@ def airport(request, pk):
     return render(request, 'airport.html', context)
 
 
-class AirportForm(ModelForm):
+class AirportForm(ModelForm,CreatePopupMixin):
     class Meta:
         model = Airport
         fields = '__all__'
@@ -791,81 +797,6 @@ class MealDeleteView(LoginRequiredMixin, DeleteView):
     permission_required = 'administration'
 
 
-# Travel packages
-#
-#
-# class TravelPackageForm(ModelForm):
-#     class Meta:
-#         model = TravelPackage
-#         fields = '__all__'
-#         widgets = {
-#             'arrival_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2)),
-#             'departure_date': SelectDateWidget(years=range(datetime.now().year, datetime.now().year + 2))
-#         }
-#
-#     def clean(self):
-#         cleaned_data = super().clean()
-#         arrival_date = cleaned_data.get('arrival_date')
-#         departure_date = cleaned_data.get('departure_date')
-#
-#         if arrival_date and arrival_date < datetime.today().date():
-#             self.add_error('arrival_date', 'Nelze vybrat datum příjezdu v minulosti.')
-#
-#         if departure_date and departure_date < datetime.today().date():
-#             self.add_error('departure_date', 'Nelze vybrat datum odjezdu v minulosti.')
-#
-#         if arrival_date and departure_date and arrival_date >= departure_date:
-#             self.add_error('departure_date', 'Datum odjezdu musí být po datu příjezdu.')
-#
-#         return cleaned_data
-#
-#
-# def travel_package(request, pk):
-#     travel_package_object = TravelPackage.objects.get(id=pk)
-#     travel_packages = MealPlan.objects.filter(travel_package=travel_package_object)
-#     context = {'travel_package': travel_package_object, 'travel_packages': travel_packages}
-#     return render(request, 'travel_package.html', context)
-#
-#
-# class TravelPackageView(View):
-#     def get(self, request):
-#         travel_package_list = TravelPackage.objects.all()
-#         context = {'travel_packages': travel_package_list}
-#         return render(request, 'travel_package_admin.html', context)
-#
-#
-# class TravelPackageCreate(LoginRequiredMixin, CreateView):
-#     template_name = 'travel_package_create.html'
-#     model = TravelPackage
-#     form_class = TravelPackageForm
-#     success_url = reverse_lazy('administration')
-#     permission_required = 'administration'
-#
-#     def post(self, request, *args, **kwargs):
-#         print("POST method called")
-#         return super().post(request, *args, **kwargs)
-#
-#     def form_valid(self, form):
-#         arrival_date = form.cleaned_data.get('arrival_date')
-#         departure_date = form.cleaned_data.get('departure_date')
-#         print(f"Arrival Date: {arrival_date}, Departure Date: {departure_date}")
-#
-#
-# class TravelPackageUpdate(LoginRequiredMixin, UpdateView):
-#     template_name = 'travel_package_create.html'
-#     model = TravelPackage
-#     form_class = TravelPackageForm
-#     success_url = reverse_lazy('administration')
-#     permission_required = 'administration'
-#
-#
-# class TravelPackageDelete(LoginRequiredMixin, DeleteView):
-#     template_name = 'travel_package_delete.html'
-#     model = TravelPackage
-#     success_url = reverse_lazy('administration')
-#     permission_required = 'administration'
-
-
 # Transportation
 
 
@@ -876,12 +807,12 @@ class TransportationForm(LoginRequiredMixin, CreatePopupMixin, ModelForm):
 
         widgets = {
             'departure_airport': autocomplete.ModelSelect2(
-                url='airport-autocomplete',
-                forward=['arrival_airport'],  # Předáváme informace o příchozím letišti pro filtrování
+                url='airport_autocomplete',
+                forward=['arrival_airport'],
             ),
             'arrival_airport': autocomplete.ModelSelect2(
-                url='airport-autocomplete',
-                forward=['departure_airport'],  # Předáváme informace o odchozím letišti pro filtrování
+                url='airport_autocomplete',
+                forward=['departure_airport'],
             ),
         }
 
@@ -938,6 +869,10 @@ class TravelerForm(ModelForm):
         model = Traveler
         fields = '__all__'
 
+        widgets = {
+            'birth_date': DateInput(attrs={'type': 'date'}),
+        }
+
 
 # PURCHASE
 
@@ -953,12 +888,18 @@ class PurchaseForm(ModelForm):
             widget=TextInput(attrs={'readonly': 'readonly'})
         )
         widgets = {
-            'hotel': TextInput(attrs={'readonly': 'readonly'})
+            'hotel': TextInput(attrs={'readonly': 'readonly'}),
+            'arrival_date': TextInput(attrs={'readonly': 'readonly'}),
+            'departure_date': TextInput(attrs={'readonly': 'readonly'}),
+            'meal_plan': TextInput(attrs={'readonly': 'readonly'}),
+            'single_rooms': TextInput(attrs={'readonly': 'readonly'}),
+            'double_rooms': TextInput(attrs={'readonly': 'readonly'}),
+            'family_rooms': TextInput(attrs={'readonly': 'readonly'}),
+            'suite_rooms': TextInput(attrs={'readonly': 'readonly'}),
+            'transportation': TextInput(attrs={'readonly': 'readonly'}),
+            'travelers': TextInput(attrs={'readonly': 'readonly'}),
+            'total_price': TextInput(attrs={'readonly': 'readonly'})
         }
-
-    # def __init__(self, *args, **kwargs):
-    #     super(PurchaseForm, self).__init__(*args, **kwargs)
-    #     self.fields['hotel'].disabled = True
 
 
 class PurchaseCreate(View):
@@ -967,12 +908,14 @@ class PurchaseCreate(View):
     def post(self, request, *args, **kwargs):
         purchase_form = PurchaseForm(request.POST)
         travelers_forms = []
+        travelers_list = []
 
         if purchase_form.is_valid():
-            print('ahoj')
             purchase = purchase_form.save(commit=False)
             purchase.customer = request.user
-            purchase.hotel_id = request.POST.get('hotel')
+            hotel_id = request.POST.get('hotel_id')
+            hotel_instance = Hotel.objects.get(pk=int(hotel_id))
+            purchase.hotel = hotel_instance
             purchase.arrival_date = request.POST.get('arrival_date')
             purchase.departure_date = request.POST.get('departure_date')
             purchase.meal_plan_id = request.POST.get('meal_plan')
@@ -980,31 +923,76 @@ class PurchaseCreate(View):
             purchase.number_of_double_rooms = request.POST.get('double_rooms')
             purchase.number_of_family_rooms = request.POST.get('family_rooms')
             purchase.number_of_suites = request.POST.get('suite_rooms')
-            purchase.transportation = request.POST.get('transportation')
-            purchase.travelers = request.POST.get('travelers')
+            purchase.transportation_id = request.POST.get('transportation')
             purchase.total_price = request.POST.get('total_price')
-            purchase.save()
 
-            # Získání vytvořené rezervace
-            purchase = get_object_or_404(Purchase, pk=purchase.pk)
-
-            # Přidání formulářů cestujících na základě počtu
-            num_travelers = int(request.POST.get('number_of_travelers', 0))
+            num_travelers = int(request.POST.get('travelers', 0))
             for i in range(num_travelers):
-                traveler_form = TravelerForm(request.POST, prefix=f'number_of_travelers_{i}')
+                traveler_form = TravelerForm(request.POST, prefix=f'travelers_{i}')
                 if traveler_form.is_valid():
                     traveler = traveler_form.save(commit=False)
-                    traveler.purchase = purchase
-                    traveler.save()
                     travelers_forms.append(traveler_form)
+                    if traveler.first_name and traveler.last_name:
+                        traveler.purchase = purchase
+                        traveler.save()
+
+                        travelers_list.append(traveler)
+
                 else:
-                    print(traveler_form.errors)
                     travelers_forms.append(TravelerForm(prefix=f'number_of_travelers_{i}'))
 
-            travelers = int(request.POST.get('travelers', 0))
+            meal_plan_id = purchase.meal_plan_id
+            meal_plan_instance = MealPlan.objects.get(pk=meal_plan_id)
+            meal_plan_str = str(meal_plan_instance)
 
-            return render(request, 'purchase_success.html', {'purchase': purchase,
+            transportation_id = purchase.transportation_id
+            transportation_instance = Transportation.objects.get(pk=transportation_id)
+            transportation_str = str(transportation_instance)
+
+            travelers = int(request.POST.get('travelers', 0))
+            if request.POST.get('step') == "1":
+                return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+                                                                'meal_plan': meal_plan_str,
+                                                                'traveler_forms': travelers_forms,
+                                                                'travelers': travelers})
+            purchase.save()
+
+            single_rooms = int(purchase.number_of_single_rooms)
+            double_rooms = int(purchase.number_of_double_rooms)
+            family_rooms = int(purchase.number_of_family_rooms)
+            suite_rooms = int(purchase.number_of_suites)
+
+            hotel_instance = purchase.hotel
+
+            for traveler in travelers_list:
+                purchase.traveler.add(traveler)
+            purchase.save()
+            return render(request, 'purchase_success.html', {'purchase_form': purchase_form,
+                                                             'meal_plan': meal_plan_str,
+                                                             'transportation': transportation_str,
+                                                             'customer': purchase.customer,
+                                                             'hotel_name': purchase.hotel,
+                                                             'total_price': purchase.total_price,
+                                                             'arrival_date': purchase.arrival_date,
+                                                             'departure_date': purchase.departure_date,
                                                              'traveler_forms': travelers_forms, 'travelers': travelers})
-        print(purchase_form.errors)
-        return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
-                                                        'traveler_forms': travelers_forms})
+        else:
+            return render(request, 'purchase_create.html', {'purchase_form': purchase_form,
+                                                            'traveler_forms': travelers_forms})
+
+
+class PurchaseDetail(View):
+    template_name = 'purchase_detail.html'
+
+    def get(self, request, pk):
+        purchase_object = Purchase.objects.get(pk=pk)
+        context = {'purchase': purchase_object}
+        return render(request, self.template_name, context)
+
+
+def purchase_success(request, pk):
+    purchase = Purchase.objects.get(pk=pk)
+    context = {'purchase': purchase}
+    return render(request, 'purchase_success.html', context)
+
+

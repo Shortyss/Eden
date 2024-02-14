@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Doprava</h1>
-<ul>
+<h1 class="title">Doprava</h1>
+<ul class="transportation-list">
     {% for transportation in transportations %}
-    <li>
+    <li class="transportation-item">
         <a href="{% url 'transportation' transportation.id %}">{{ transportation }}</a>
         <a href="{% url 'transportation_update' transportation.id %}"><button>Upravit</button></a>
         <a href="{% url 'transportation_delete' transportation.id %}"><button>Smazat</button></a>

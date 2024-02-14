@@ -1,8 +1,8 @@
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from _decimal import Decimal
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Model, CharField, IntegerField, DateField, ForeignKey, DO_NOTHING, TextField, CASCADE, \
     DecimalField, ImageField, SET_NULL, DateTimeField, ManyToManyField
 from django.contrib.auth.models import User
@@ -74,7 +74,7 @@ class Hotel(Model):
     name = CharField(max_length=132, null=False, blank=False, verbose_name='Název')
     city = ForeignKey(City, on_delete=DO_NOTHING, related_name='hotels_of_cities', verbose_name='Město')
     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
-                                related_name='transportation_of_hotel', verbose_name='Doprava')
+                                to_field='id', related_name='transportation_of_hotel', verbose_name='Doprava')
     country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country',
                          verbose_name='Stát')
     single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')
@@ -96,6 +96,54 @@ class Hotel(Model):
     description = TextField(null=True, blank=True, verbose_name='Popis')
     images = MultiFileField(min_num=1, max_num=6, max_file_size=1024 * 1024 * 5, required=False)
 
+    def get_available_rooms(self, room_type, quantity, arrival_date, departure_date):
+        arrival_date = datetime.strptime(arrival_date, '%Y-%m-%d')
+        departure_date = datetime.strptime(departure_date, '%Y-%m-%d')
+        day = arrival_date
+
+        hotel_single = []
+        hotel_double = []
+        hotel_family = []
+        hotel_suite = []
+
+        while day < departure_date:
+            purchases = Purchase.objects.filter(arrival_date__lt=day, departure_date__gt=day)
+            day = day + timedelta(days=1)
+
+            number_single = self.single_rooms
+            number_double = self.double_rooms
+            number_family = self.family_rooms
+            number_suite = self.suite_rooms
+
+            for purchase in purchases:
+                number_single -= purchase.single_rooms
+                number_double -= purchase.double_rooms
+                number_family -= purchase.family_rooms
+                number_suite -= purchase.suite_rooms
+            hotel_single.append(number_single)
+            hotel_double.append(number_double)
+            hotel_family.append(number_family)
+            hotel_suite.append(number_suite)
+
+        if room_type == 'single':
+            return min(hotel_single) >= quantity
+        elif room_type == 'double':
+            return min(hotel_double) >= quantity
+        elif room_type == 'family':
+            return min(hotel_family) >= quantity
+        elif room_type == 'suite':
+            return min(hotel_suite) >= quantity
+        elif room_type == 'all':
+            return {
+                'available_rooms': {
+                    'single_rooms': min(hotel_single),
+                    'double_rooms': min(hotel_double),
+                    'family_rooms': min(hotel_family),
+                    'suite_rooms': min(hotel_suite)}
+            }
+        else:
+            return False
+
     def get_images(self):
         return HotelImage.objects.filter(hotel=self)
 
@@ -111,69 +159,19 @@ class MealPlan(Model):
         return f"{self.name}, {self.price}"
 
 
-# class TravelPackage(Model):
-#     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING)
-#     meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, related_name='travel_packages', verbose_name='Strava')
-#
-#     number_of_single_rooms = IntegerField(null=False, blank=False, default=0,
-#                                           verbose_name='Počet jednolůžkových pokojů')
-#     number_of_double_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dvoulůžkových pokojů')
-#     number_of_family_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet rodinných pokojů')
-#     number_of_suites = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
-#     number_of_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Celkový počet pokojů')
-#     room_type = CharField(max_length=16, choices=[
-#         ('single', 'Jednolůžkový'),
-#         ('double', 'Dvoulůžkový'),
-#         ('family', 'Rodinný'),
-#         ('suite', 'Apartmán'),
-#     ], null=True, blank=True, verbose_name='Typ pokoje')
-#
-#     number_of_adults = IntegerField(null=False, blank=False, default=0, verbose_name='Počet dospělých')
-#     number_of_children = IntegerField(null=True, blank=True, default=0, verbose_name='Počet dětí')
-#
-#     transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, null=True, blank=True,
-#                                 related_name='transportation', verbose_name='Doprava')
-#     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
-#     departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-#
-#     def calculate_total_price(self):
-#         meal_price = self.meal_plan.price
-#         transport_price = self.transportation.price if self.transportation else Decimal(0)
-#
-#         stay_dates = [self.arrival_date + timedelta(days=n) for n in
-#                       range((self.departure_date - self.arrival_date).days + 1)]
-#
-#         total_price = Decimal(0)
-#
-#         for date in stay_dates:
-#             price_entry = Prices.objects.filter(
-#                 hotel=self.hotel,
-#                 arrival_date__lte=date,
-#                 departure_date__gte=date
-#             ).first()
-#
-#             if price_entry:
-#                 total_price += getattr(price_entry, f"price_{self.room_type}") * self.number_of_rooms
-#
-#         total_price += meal_price * (self.number_of_adults + (self.number_of_children or 0))
-#         total_price += transport_price * (self.number_of_adults + (self.number_of_children or 0))
-#
-#         return total_price
-#
-#     def __str__(self):
-#         return f"{self.hotel.name} - {self.meal_plan.name} - {self.calculate_total_price}"
-#
-
 class Traveler(Model):
-    first_name = CharField(null=False, blank=False, max_length=68, verbose_name='Jméno')
-    last_name = CharField(null=False, blank=False, max_length=68, verbose_name='Příjmení')
-    birth_date = DateField(null=False, blank=False, default=None, verbose_name='Datum narození')
+
+    first_name = CharField(null=True, blank=True, default=None, max_length=68, verbose_name='Jméno')
+    last_name = CharField(null=True, blank=True, default=None, max_length=68, verbose_name='Příjmení')
+    birth_date = DateField(null=True, blank=True, default=None, verbose_name='Datum narození')
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
 
 
 class Purchase(Model):
+    traveler = ManyToManyField(Traveler, default=None, null=True, blank=True,
+                               related_name='purchase_travelers')
     hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, default=None, null=True, blank=True, related_name='purchase_hotel')
     customer = ForeignKey(User, on_delete=CASCADE, related_name='purchase_customer', verbose_name='Zákazník')
     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
@@ -192,6 +190,21 @@ class Purchase(Model):
                                 related_name='purchase_transportation', verbose_name='Doprava')
     travelers = IntegerField(default=1, verbose_name='Celkem cestujících')
     special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            hotel = Hotel.objects.get(pk=self.hotel.pk)
+            if (
+                hotel.get_available_rooms('single', self.single_rooms, self.arrival_date, self.departure_date) and
+                hotel.get_available_rooms('double', self.double_rooms, self.arrival_date, self.departure_date) and
+                hotel.get_available_rooms('family', self.family_rooms, self.arrival_date, self.departure_date) and
+                hotel.get_available_rooms('suite', self.suite_rooms, self.arrival_date, self.departure_date)
+            ):
+                super().save(*args, **kwargs)
+            else:
+                raise ValueError("Nedostatek volných pokojů pro dané období.")
+        else:
+            super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.customer}- {self.total_price}"

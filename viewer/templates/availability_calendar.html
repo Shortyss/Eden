@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% load static %}
+
+{% block content %}
+    <h1 class="title">Kalendář dostupnosti pro hotel {{ hotel_name }}:</h1>
+    <div class="calendar">
+        {% for event in events %}
+            <p>{{ event.title }} - {{ event.start }} to {{ event.end }}</p>
+        {% endfor %}
+    </div>
+
+    <div class="room-type-form">
+        <form method="get" action="{% url 'availability_calendar' pk=hotel.id %}">
+            {{ room_type_form.as_p }}
+            <button type="submit">Filtrovat podle typu pokoje</button>
+        </form>
+    </div>
+{% endblock %}

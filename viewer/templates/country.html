@@ -1,14 +1,22 @@
 {% extends "base.html" %}
 
+{% load static %}
+
 {% block content %}
-  <h1>Města v zemi: {{ country }}</h1>
+  <h1 class="title">Města v zemi: {{ country }}</h1>
   {% if cities %}
-    <ul>
+    <ul class="city-list">
       {% for city in cities %}
-        <li><a href="{% url 'city' city.id %}">{{city}}</a></li>
+        <li>
+          <div class="city-item">
+            <img class="city-img" src="{% static 'cities/' %}{{ city.name|lower }}.jpg" alt="{{ city.name }}" width="300" height="250">
+            <a href="{% url 'city' city.id %}" class="city-link">{{ city.name }}</a>
+          </div>
+        </li>
       {% endfor %}
     </ul>
   {% else %}
     <p>Žádné města ve státě nebyly nalezeny.</p>
   {% endif %}
 {% endblock %}
+ck %}

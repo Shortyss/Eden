@@ -1,9 +1,4 @@
 document.addEventListener('DOMContentLoaded', function () {
-    function showAlert(message) {
-        alert(message);
-    }
-
-    showAlert('Pozor nejedná se o skutečnou cestovní kancelář! Jde pouze o ukázkovou stránku.')
 
     function getAvailableRooms(hotelId, arrivalDate, departureDate) {
         return fetch(`/api/hotel_custom_api/${hotelId}/?arrival_date=${arrivalDate}&departure_date=${departureDate}`)

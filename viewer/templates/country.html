@@ -9,7 +9,7 @@
       {% for city in cities %}
         <li>
           <div class="city-item">
-            <img class="city-img" src="{% static 'cities/' %}{{ city.name|lower }}.jpg" alt="{{ city.name }}" width="300" height="250">
+            <img class="city-img" src="{% static 'cities/' %}{{ city.name|slugify }}.jpg" alt="{{ city.name }}" width="300" height="250">
             <a href="{% url 'city' city.id %}" class="city-link">{{ city.name }}</a>
           </div>
         </li>

@@ -9,7 +9,7 @@
       {% for country in countries %}
         <li>
           <div class="country-item">
-            <img class="country-img" src="{% static 'images/' %}{{ country.name|lower }}.jpg" alt="{{ country.name }}" width="300" height="250">
+            <img class="country-img" src="{% static 'images/' %}{{ country.name|slugify }}.jpg" alt="{{ country.name }}" width="300" height="250">
             <a href="{% url 'country' country.id %}" class="country-link">{{ country.name }}</a>
           </div>
         </li>

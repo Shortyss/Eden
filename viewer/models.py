@@ -53,16 +53,16 @@ class City(Model):
 
 class Airport(Model):
     name = CharField(max_length=132, null=True, blank=True, verbose_name='Název')
-    airport_city = ForeignKey(City, on_delete=DO_NOTHING, null=True, blank=True, verbose_name='Město')
+    airport_city = ForeignKey(City, on_delete=CASCADE, null=True, blank=True, verbose_name='Město')
 
     def __str__(self):
         return f"{self.airport_city} - {self.name}"
 
 
 class Transportation(Model):
-    departure_airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True,
+    departure_airport = ForeignKey(Airport, on_delete=CASCADE, null=True, blank=True,
                                    related_name='departure_transportation', verbose_name='Letiště odletu')
-    arrival_airport = ForeignKey(Airport, on_delete=DO_NOTHING, null=True, blank=True,
+    arrival_airport = ForeignKey(Airport, on_delete=CASCADE, null=True, blank=True,
                                  related_name='arrival_transportation', verbose_name='Letiště příletu')
     price = DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Cena dopravy')
 
@@ -72,10 +72,10 @@ class Transportation(Model):
 
 class Hotel(Model):
     name = CharField(max_length=132, null=False, blank=False, verbose_name='Název')
-    city = ForeignKey(City, on_delete=DO_NOTHING, related_name='hotels_of_cities', verbose_name='Město')
-    transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
+    city = ForeignKey(City, on_delete=CASCADE, related_name='hotels_of_cities', verbose_name='Město')
+    transportation = ForeignKey(Transportation, on_delete=CASCADE, default=None, null=True, blank=True,
                                 to_field='id', related_name='transportation_of_hotel', verbose_name='Doprava')
-    country = ForeignKey(Country, on_delete=DO_NOTHING, null=True, blank=True, related_name='city_of_country',
+    country = ForeignKey(Country, on_delete=CASCADE, null=True, blank=True, related_name='city_of_country',
                          verbose_name='Stát')
     single_rooms = IntegerField(default=0, verbose_name='Jednolůžkové pokoje')
     double_rooms = IntegerField(default=0, verbose_name='Dvoulůžkové pokoje')
@@ -172,11 +172,11 @@ class Traveler(Model):
 class Purchase(Model):
     traveler = ManyToManyField(Traveler, default=None, null=True, blank=True,
                                related_name='purchase_travelers')
-    hotel = ForeignKey(Hotel, on_delete=DO_NOTHING, default=None, null=True, blank=True, related_name='purchase_hotel')
+    hotel = ForeignKey(Hotel, on_delete=CASCADE, default=None, null=True, blank=True, related_name='purchase_hotel')
     customer = ForeignKey(User, on_delete=CASCADE, related_name='purchase_customer', verbose_name='Zákazník')
     arrival_date = DateField(null=True, blank=True, verbose_name='Datum příjezdu')
     departure_date = DateField(null=True, blank=True, verbose_name='Datum odjezdu')
-    meal_plan = ForeignKey(MealPlan, on_delete=DO_NOTHING, default=None, null=True, blank=True,
+    meal_plan = ForeignKey(MealPlan, on_delete=CASCADE, default=None, null=True, blank=True,
                            related_name='travel_packages', verbose_name='Strava')
 
     single_rooms = IntegerField(null=False, blank=False, default=0,
@@ -186,7 +186,7 @@ class Purchase(Model):
     suite_rooms = IntegerField(null=False, blank=False, default=0, verbose_name='Počet apartmánů')
     total_price = DecimalField(max_digits=10, null=True, blank=True, decimal_places=2, default=0,
                                verbose_name='Cena celkem')
-    transportation = ForeignKey(Transportation, on_delete=DO_NOTHING, default=None, null=True, blank=True,
+    transportation = ForeignKey(Transportation, on_delete=CASCADE, default=None, null=True, blank=True,
                                 related_name='purchase_transportation', verbose_name='Doprava')
     travelers = IntegerField(default=1, verbose_name='Celkem cestujících')
     special_requirements = TextField(null=True, blank=True, verbose_name='Zvláštní požadavky')

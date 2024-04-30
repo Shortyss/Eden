@@ -1,5 +1,6 @@
 import json
 from logging import getLogger
+from django.urls import reverse
 
 from dal import autocomplete
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -906,6 +907,9 @@ class PurchaseCreate(View):
     template_name = 'purchase_create.html'
 
     def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect(reverse('login'))
+
         purchase_form = PurchaseForm(request.POST)
         travelers_forms = []
         travelers_list = []
